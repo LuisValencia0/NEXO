@@ -19,8 +19,9 @@ const IniciativaSchema = new mongoose.Schema({
   fechaCierre: { type: Date },
 
   // Referencia al usuario que creó la iniciativa
-  lider: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', required: true }
-
+  lider: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', required: true },
+  postulacionesCount: { type: Number, default: 0 }
+  
 }, { timestamps: true });
 
 module.exports = mongoose.model('Iniciativa', IniciativaSchema);
