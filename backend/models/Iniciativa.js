@@ -11,17 +11,25 @@ const IniciativaSchema = new mongoose.Schema({
   },
   estado: {
     type: String,
-    enum: ['abierta', 'en_proceso', 'cerrada'],
+    enum: ['abierta', 'en_proceso', 'cerrada', 'eliminada'],
     default: 'abierta'
   },
   colaboradoresRequeridos: { type: [String], default: [] },
   habilidadesBuscadas:     { type: [String], default: [] },
   fechaCierre: { type: Date },
+  fechaCierreReal: { type: Date, default: null },
 
   // Referencia al usuario que creó la iniciativa
   lider: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario', required: true },
-  postulacionesCount: { type: Number, default: 0 }
-  
+  postulacionesCount: { type: Number, default: 0 },
+
+  // Hueco para el futuro (privacidad de la iniciativa)
+  visibilidad: {
+    type: String,
+    enum: ['publica', 'privada'],
+    default: 'publica'
+  }
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Iniciativa', IniciativaSchema);

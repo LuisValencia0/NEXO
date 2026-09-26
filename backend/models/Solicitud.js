@@ -29,11 +29,36 @@ const SolicitudSchema = new mongoose.Schema({
     default: ''
   },
 
-  // Estado de la solicitud
+  // Estado de la relación usuario ↔ iniciativa
   estado: {
     type: String,
-    enum: ['pendiente', 'aceptada', 'rechazada'],
+    enum: ['pendiente', 'aceptada', 'rechazada', 'finalizada', 'cancelada'],
     default: 'pendiente'
+  },
+
+  // Por qué terminó la participación (solo si estado === 'finalizada')
+  motivoFinalizacion: {
+    type: String,
+    enum: [
+      'salio_por_decision_propia',
+      'finalizado_por_el_lider',
+      'iniciativa_cerrada',
+      'iniciativa_eliminada'
+    ],
+    default: null
+  },
+
+  // Cuándo terminó la participación
+  fechaFinalizacion: {
+    type: Date,
+    default: null
+  },
+
+  // Control del usuario sobre su vínculo en el perfil
+  visibilidadEnPerfil: {
+    type: String,
+    enum: ['publico', 'oculto', 'eliminado'],
+    default: 'publico'
   },
 
   // Quién inició la solicitud (útil para auditoría y para saber si fue el líder o el postulante)

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Solicitud = require('../models/Solicitud');
 const Iniciativa = require('../models/Iniciativa');
+const Equipo = require('../models/Equipo');
 const verificarToken = require('../middleware/auth');
 
 // =========================================================
@@ -18,6 +19,11 @@ router.post('/', verificarToken, async (req, res) => {
 
     const ini = await Iniciativa.findById(iniciativa);
     if (!ini) return res.status(404).json({ error: 'Iniciativa no encontrada' });
+
+    // No se puede postular a una iniciativa terminada
+    if (['cerrada', 'eliminada'].includes(ini.estado)) {
+      return res.status(400).json({ error: 'La iniciativa ya no acepta postulaciones' });
+    }
 
     // No se puede postular a la propia iniciativa
     if (ini.lider.toString() === req.usuario.id) {
@@ -117,7 +123,7 @@ router.get('/iniciativa/:id', verificarToken, async (req, res) => {
 
 // =========================================================
 // PUT /api/solicitudes/:id/aceptar
-// El líder acepta una postulación
+// El líder acepta una postulación y el usuario entra al equipo
 // =========================================================
 router.put('/:id/aceptar', verificarToken, async (req, res) => {
   try {
@@ -132,10 +138,19 @@ router.put('/:id/aceptar', verificarToken, async (req, res) => {
       return res.status(403).json({ error: 'Solo el líder puede aceptar postulaciones' });
     }
 
+    // 1. Cambiar estado de la solicitud
     sol.estado = 'aceptada';
     await sol.save();
 
+    // 2. Agregar al usuario al equipo (si no está ya)
+    const equipo = await Equipo.findOne({ iniciativa: sol.iniciativa._id });
+    if (equipo && !equipo.miembros.some(m => m.toString() === sol.usuario.toString())) {
+      equipo.miembros.push(sol.usuario);
+      await equipo.save();
+    }
+
     res.json({ mensaje: 'Solicitud aceptada', solicitud: sol });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -162,6 +177,7 @@ router.put('/:id/rechazar', verificarToken, async (req, res) => {
     await sol.save();
 
     res.json({ mensaje: 'Solicitud rechazada', solicitud: sol });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -169,7 +185,7 @@ router.put('/:id/rechazar', verificarToken, async (req, res) => {
 
 // =========================================================
 // DELETE /api/solicitudes/:id
-// El postulante retira su propia postulación
+// El postulante retira su propia postulación (o el usuario sale del equipo)
 // =========================================================
 router.delete('/:id', verificarToken, async (req, res) => {
   try {
@@ -180,16 +196,47 @@ router.delete('/:id', verificarToken, async (req, res) => {
       return res.status(403).json({ error: 'Solo el autor puede retirar su postulación' });
     }
 
-    await Solicitud.findByIdAndDelete(req.params.id);
+    // Si aún no fue procesada, se cancela
+    // Si ya estaba aceptada, se finaliza la participación
+    if (sol.estado === 'pendiente') {
+      sol.estado = 'cancelada';
+      sol.fechaFinalizacion = new Date();
+      await sol.save();
 
-    // Decrementar contador
-    const ini = await Iniciativa.findById(sol.iniciativa);
-    if (ini && ini.postulacionesCount > 0) {
-      ini.postulacionesCount -= 1;
-      await ini.save();
+      // Decrementar contador
+      const ini = await Iniciativa.findById(sol.iniciativa);
+      if (ini && ini.postulacionesCount > 0) {
+        ini.postulacionesCount -= 1;
+        await ini.save();
+      }
+
+      return res.json({ mensaje: 'Postulación retirada correctamente' });
     }
 
-    res.json({ mensaje: 'Postulación retirada correctamente' });
+    if (sol.estado === 'aceptada') {
+      sol.estado = 'finalizada';
+      sol.motivoFinalizacion = 'salio_por_decision_propia';
+      sol.fechaFinalizacion = new Date();
+      await sol.save();
+
+      // Quitar del equipo
+      const equipo = await Equipo.findOne({ iniciativa: sol.iniciativa });
+      if (equipo) {
+        equipo.miembros = equipo.miembros.filter(
+          m => m.toString() !== req.usuario.id
+        );
+        equipo.historial.push({
+          usuario: req.usuario.id,
+          accion: 'salio'
+        });
+        await equipo.save();
+      }
+
+      return res.json({ mensaje: 'Saliste de la iniciativa correctamente' });
+    }
+
+    return res.status(400).json({ error: 'No se puede retirar una solicitud en este estado' });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
