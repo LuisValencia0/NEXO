@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function InputTags({ label, value = [], onChange, placeholder = 'Escribe y presiona Enter' }) {
@@ -43,7 +44,7 @@ export default function InputTags({ label, value = [], onChange, placeholder = '
               className="text-nexo-accent-3/60 hover:text-nexo-accent-3 transition-colors"
               aria-label={`Eliminar ${tag}`}
             >
-              ✕
+              <X size={12} strokeWidth={2.5} />
             </button>
           </span>
         ))}

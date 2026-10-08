@@ -1,4 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Compass, Sprout, Inbox, Users, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -11,7 +12,7 @@ export default function Navbar() {
   };
 
   const linkClass = ({ isActive }) =>
-    `px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+    `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
       isActive
         ? 'text-nexo-accent bg-nexo-accent/10'
         : 'text-nexo-muted hover:text-nexo-text hover:bg-white/5'
@@ -31,15 +32,19 @@ export default function Navbar() {
         {/* Links centrales */}
         <div className="hidden md:flex items-center gap-1">
           <NavLink to="/explorar" className={linkClass}>
+            <Compass size={16} strokeWidth={1.8} />
             Explorar
           </NavLink>
           <NavLink to="/mis-iniciativas" className={linkClass}>
+            <Sprout size={16} strokeWidth={1.8} />
             Mis iniciativas
           </NavLink>
           <NavLink to="/mis-solicitudes" className={linkClass}>
+            <Inbox size={16} strokeWidth={1.8} />
             Solicitudes
           </NavLink>
           <NavLink to="/mis-equipos" className={linkClass}>
+            <Users size={16} strokeWidth={1.8} />
             Equipos
           </NavLink>
         </div>
@@ -60,10 +65,11 @@ export default function Navbar() {
 
           <button
             onClick={handleLogout}
-            className="text-sm text-nexo-muted hover:text-red-400 transition-colors px-3 py-1.5"
+            className="flex items-center gap-1.5 text-sm text-nexo-muted hover:text-red-400 transition-colors px-3 py-1.5"
             title="Cerrar sesión"
           >
-            Salir
+            <LogOut size={15} strokeWidth={1.8} />
+            <span className="hidden sm:inline">Salir</span>
           </button>
         </div>
 

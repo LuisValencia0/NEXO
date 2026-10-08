@@ -1,3 +1,4 @@
+import { X } from 'lucide-react';
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -84,7 +85,7 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
             className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-nexo-muted hover:text-white hover:bg-white/10 transition-all z-10"
             aria-label="Cerrar"
           >
-            ✕
+            <X size={20} strokeWidth={2} />
           </button>
 
           {/* Contenido */}

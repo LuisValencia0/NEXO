@@ -1,3 +1,4 @@
+import { Sprout, Plus } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -50,8 +51,9 @@ export default function Explorar() {
           </p>
         </div>
 
-        <Link to="/crear-iniciativa" className="btn-primary self-start md:self-auto">
-          + Crear iniciativa
+        <Link to="/crear-iniciativa" className="btn-primary self-start md:self-auto flex items-center gap-2">
+          <Plus size={16} strokeWidth={2.2} />
+          Crear iniciativa
         </Link>
       </div>
 
@@ -77,7 +79,13 @@ export default function Explorar() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-20"
         >
-          <div className="text-6xl mb-4">🌱</div>
+          <div className="flex justify-center mb-6">
+            <Sprout
+              size={64}
+              strokeWidth={1.2}
+              className="text-nexo-accent-3 opacity-60"
+            />
+          </div>
           <h3 className="text-xl font-semibold mb-2">
             {areaActiva === 'todas'
               ? 'Aún no hay iniciativas'

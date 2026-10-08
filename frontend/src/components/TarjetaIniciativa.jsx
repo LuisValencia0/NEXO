@@ -1,4 +1,6 @@
+import { UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
+
 
 // Colores por área — fondo, borde y acento
 const estiloPorArea = {
@@ -111,8 +113,9 @@ export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
           </span>
         </div>
 
-        <span className="text-xs text-nexo-muted">
-          {iniciativa.postulacionesCount || 0} ✦
+        <span className="text-xs text-nexo-muted flex items-center gap-1">
+          <UserPlus size={12} strokeWidth={1.8} />
+          {iniciativa.postulacionesCount || 0}
         </span>
       </div>
     </motion.button>

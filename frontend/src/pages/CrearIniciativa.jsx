@@ -1,3 +1,4 @@
+import { Sprout, Hammer } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -141,24 +142,26 @@ export default function CrearIniciativa() {
             <button
               type="button"
               onClick={() => actualizar('estado', 'abierta')}
-              className={`flex-1 p-3 rounded-lg border transition-all text-sm font-medium ${
+              className={`flex-1 p-3 rounded-lg border transition-all text-sm font-medium flex items-center justify-center gap-2 ${
                 form.estado === 'abierta'
                   ? 'border-green-400/50 bg-green-400/10 text-green-400'
                   : 'border-nexo-border text-nexo-muted hover:border-green-400/30'
               }`}
             >
-              🌱 Abierta a postulaciones
+              <Sprout size={16} strokeWidth={1.8} />
+              Abierta a postulaciones
             </button>
             <button
               type="button"
               onClick={() => actualizar('estado', 'en_proceso')}
-              className={`flex-1 p-3 rounded-lg border transition-all text-sm font-medium ${
+              className={`flex-1 p-3 rounded-lg border transition-all text-sm font-medium flex items-center justify-center gap-2 ${
                 form.estado === 'en_proceso'
                   ? 'border-amber-400/50 bg-amber-400/10 text-amber-400'
                   : 'border-nexo-border text-nexo-muted hover:border-amber-400/30'
               }`}
             >
-              🔨 En proceso
+              <Hammer size={16} strokeWidth={1.8} />
+              En proceso
             </button>
           </div>
         </div>
