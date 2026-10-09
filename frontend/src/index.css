@@ -1,9 +1,14 @@
+/* === Fuente de NEXO === */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+/* === Fuente activa (cambia aquí para alternar) === */
+:root {
+  --fuente-activa: 'Lato', 'Segoe UI', system-ui, sans-serif;
+}
 
 @layer base {
   html, body, #root {
@@ -15,8 +20,9 @@
   body {
     background-color: #07080f;
     color: #eef0f8;
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    font-family: var(--fuente-activa);
     -webkit-font-smoothing: antialiased;
+    line-height: 1.55
   }
 
   ::-webkit-scrollbar { width: 10px; }
@@ -65,6 +71,9 @@
   }
   .card-nexo:hover { border-color: rgba(109, 139, 255, 0.4); }
 }
+
+
+/* === Animaciones de orbes === */
 @keyframes float-1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(35px, -45px) scale(1.08); }
@@ -90,12 +99,10 @@
 .tablero-corcho {
   position: relative;
   background-color: #0a0a10;
-  /* Textura de corcho sutil con gradientes radiales */
   background-image:
     radial-gradient(circle at 10% 20%, rgba(88, 224, 255, 0.04) 0%, transparent 25%),
     radial-gradient(circle at 80% 50%, rgba(176, 109, 255, 0.04) 0%, transparent 25%),
     radial-gradient(circle at 50% 90%, rgba(109, 139, 255, 0.04) 0%, transparent 25%),
-    /* Textura tipo grano con SVG inline */
     url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='corcho'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.7 0 0 0 0 0.6 0 0 0 0 0.5 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23corcho)'/%3E%3C/svg%3E");
   background-size: 100% 100%, 100% 100%, 100% 100%, 200px 200px;
   border: 1px solid rgba(109, 139, 255, 0.15);
@@ -104,7 +111,6 @@
     0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Borde con efecto de "madera" alrededor del corcho */
 .tablero-corcho::before {
   content: '';
   position: absolute;

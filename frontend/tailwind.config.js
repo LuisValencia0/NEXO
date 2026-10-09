@@ -17,7 +17,7 @@ export default {
         'nexo-accent-3':  '#58e0ff',
       },
       fontFamily: {
-        sans: ['Inter', 'Segoe UI', 'system-ui', 'sans-serif'],
+        sans: ['Lato', 'Segoe UI', 'system-ui', 'sans-serif'],
       },
     },
   },

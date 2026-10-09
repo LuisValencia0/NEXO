@@ -6,6 +6,8 @@ import Explorar from './pages/Explorar.jsx';
 import CrearIniciativa from './pages/CrearIniciativa.jsx';
 import RutaProtegida from './components/RutaProtegida.jsx';
 import Layout from './components/Layout.jsx';
+import DetalleIniciativa from './pages/DetalleIniciativa.jsx';
+import MisIniciativas from './pages/MisIniciativas.jsx';
 
 
 function Placeholder({ titulo }) {
@@ -28,10 +30,12 @@ export default function App() {
       {/* Protegidas */}
       <Route path="/explorar" element={<RutaProtegida><Layout><Explorar /></Layout></RutaProtegida>} />
       <Route path="/crear-iniciativa" element={<RutaProtegida><Layout><CrearIniciativa /></Layout></RutaProtegida>} />
-      <Route path="/mis-iniciativas" element={<RutaProtegida><Layout><Placeholder titulo="Mis iniciativas" /></Layout></RutaProtegida>} />
       <Route path="/mis-solicitudes" element={<RutaProtegida><Layout><Placeholder titulo="Solicitudes" /></Layout></RutaProtegida>} />
       <Route path="/mis-equipos" element={<RutaProtegida><Layout><Placeholder titulo="Mis equipos" /></Layout></RutaProtegida>} />
       <Route path="/perfil" element={<RutaProtegida><Layout><Placeholder titulo="Mi perfil" /></Layout></RutaProtegida>} />
+      <Route path="/iniciativa/:id" element={<RutaProtegida><Layout><DetalleIniciativa /></Layout></RutaProtegida>}/>
+      <Route path="/mis-iniciativas" element={<RutaProtegida><Layout><MisIniciativas /></Layout></RutaProtegida>}/>
     </Routes>
   );
 }
+
