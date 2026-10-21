@@ -1,4 +1,4 @@
-import { Sprout, Hammer } from 'lucide-react';
+import { Sprout, Hammer, Globe, Lock } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,10 +13,11 @@ export default function CrearIniciativa() {
     titulo: '',
     descripcion: '',
     area: 'tecnología',
-    estado: 'abierta',
+    visibilidad: 'publica',
     colaboradoresRequeridos: [],
     habilidadesBuscadas: [],
     fechaCierre: '',
+    limiteColaboradores: 3,
   });
 
   const [cargando, setCargando] = useState(false);
@@ -43,9 +44,10 @@ export default function CrearIniciativa() {
         titulo: form.titulo.trim(),
         descripcion: form.descripcion.trim(),
         area: form.area,
-        estado: form.estado,
+        visibilidad: form.visibilidad,
         colaboradoresRequeridos: form.colaboradoresRequeridos,
         habilidadesBuscadas: form.habilidadesBuscadas,
+        limiteColaboradores: Number(form.limiteColaboradores),
       };
 
       // Solo enviar fechaCierre si está presente
@@ -133,35 +135,35 @@ export default function CrearIniciativa() {
         {/* Área */}
         <SelectorArea value={form.area} onChange={(v) => actualizar('area', v)} />
 
-        {/* Estado */}
+        {/* Visibilidad */}
         <div>
           <label className="block text-sm text-nexo-muted mb-2">
-            Estado inicial
+            Visibilidad de la iniciativa
           </label>
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => actualizar('estado', 'abierta')}
+              onClick={() => actualizar('visibilidad', 'publica')}
               className={`flex-1 p-3 rounded-lg border transition-all text-sm font-medium flex items-center justify-center gap-2 ${
-                form.estado === 'abierta'
+                form.visibilidad === 'publica'
                   ? 'border-green-400/50 bg-green-400/10 text-green-400'
                   : 'border-nexo-border text-nexo-muted hover:border-green-400/30'
               }`}
             >
-              <Sprout size={16} strokeWidth={1.8} />
-              Abierta a postulaciones
+              <Globe size={16} strokeWidth={1.8} />
+              Pública
             </button>
             <button
               type="button"
-              onClick={() => actualizar('estado', 'en_proceso')}
+              onClick={() => actualizar('visibilidad', 'privada')}
               className={`flex-1 p-3 rounded-lg border transition-all text-sm font-medium flex items-center justify-center gap-2 ${
-                form.estado === 'en_proceso'
-                  ? 'border-amber-400/50 bg-amber-400/10 text-amber-400'
-                  : 'border-nexo-border text-nexo-muted hover:border-amber-400/30'
+                form.visibilidad === 'privada'
+                  ? 'border-purple-400/50 bg-purple-400/10 text-purple-400'
+                  : 'border-nexo-border text-nexo-muted hover:border-purple-400/30'
               }`}
             >
-              <Hammer size={16} strokeWidth={1.8} />
-              En proceso
+              <Lock size={16} strokeWidth={1.8} />
+              Privada (con código)
             </button>
           </div>
         </div>
@@ -195,6 +197,24 @@ export default function CrearIniciativa() {
           />
           <p className="text-xs text-nexo-muted mt-1.5">
             Solo informativa. Podrás cerrarla manualmente cuando quieras.
+          </p>
+        </div>
+
+        {/* Límite de colaboradores */}
+        <div>
+          <label className="block text-sm text-nexo-muted mb-2">
+            Límite de colaboradores (incluyéndote)
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="20"
+            value={form.limiteColaboradores}
+            onChange={(e) => actualizar('limiteColaboradores', e.target.value)}
+            className="input-base"
+          />
+          <p className="text-xs text-nexo-muted mt-1.5">
+            ¿Cuántas personas en total (tú incluido) formarán el equipo?
           </p>
         </div>
 

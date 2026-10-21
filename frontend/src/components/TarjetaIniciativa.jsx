@@ -1,6 +1,6 @@
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Users, CheckCircle2, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
-
+import { useNavigate } from 'react-router-dom';
 
 // Colores por área — fondo, borde y acento
 const estiloPorArea = {
@@ -20,13 +20,20 @@ const etiquetaEstado = {
 };
 
 export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
+  const navigate = useNavigate();
   const area = estiloPorArea[iniciativa.area] || estiloPorArea['otro'];
   const estado = etiquetaEstado[iniciativa.estado] || etiquetaEstado['abierta'];
 
   return (
     <motion.button
       type="button"
-      onClick={() => onClick?.(iniciativa)}
+      onClick={() => {
+        if (iniciativa.pertenezco) {
+          navigate(`/iniciativa/${iniciativa._id}`);
+        } else {
+          onClick?.(iniciativa);
+        }
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{
@@ -55,12 +62,37 @@ export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
 
       {/* Etiqueta de área */}
       <div className="flex items-center justify-between mb-3">
-        <span
-          className="text-xs px-2.5 py-1 rounded-full font-medium"
-          style={{ backgroundColor: `${area.acento}20`, color: area.acento }}
-        >
-          {iniciativa.area}
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="text-xs px-2.5 py-1 rounded-full font-medium"
+            style={{ backgroundColor: `${area.acento}20`, color: area.acento }}
+          >
+            {iniciativa.area}
+          </span>
+          
+          {/* Chulito si ya perteneces */}
+          {iniciativa.pertenezco && (
+            <span 
+              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-green-400/10 text-green-400 border border-green-400/20"
+              title="Ya eres parte de este equipo"
+            >
+              <CheckCircle2 size={12} strokeWidth={2.5} />
+              En el equipo
+            </span>
+          )}
+
+          {/* Relojito si ya postulaste pero no te han aceptado */}
+          {iniciativa.postulado && (
+            <span 
+              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20"
+              title="Has enviado una postulación"
+            >
+              <Clock size={12} strokeWidth={2.5} />
+              Postulado
+            </span>
+          )}
+        </div>
+        
         <span
           className="text-xs font-medium"
           style={{ color: estado.color }}
@@ -113,10 +145,27 @@ export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
           </span>
         </div>
 
-        <span className="text-xs text-nexo-muted flex items-center gap-1">
-          <UserPlus size={12} strokeWidth={1.8} />
-          {iniciativa.postulacionesCount || 0}
-        </span>
+        <div className="flex items-center gap-3">
+          {/* Contador de postulaciones */}
+          <span className="text-xs text-nexo-muted flex items-center gap-1" title="Postulaciones recibidas">
+            <UserPlus size={12} strokeWidth={1.8} />
+            {iniciativa.postulacionesCount || 0}
+          </span>
+
+          {/* Indicador de cupos real (Miembros / Límite) */}
+          <span 
+            className={`text-xs flex items-center gap-1 font-medium ${
+              (iniciativa.miembrosCount || 1) >= (iniciativa.limiteColaboradores || 5)
+                ? 'text-red-400'
+                : 'text-nexo-accent-3'
+            }`}
+            title="Miembros actuales / Límite de cupos"
+          >
+            <Users size={12} strokeWidth={1.8} />
+            {(iniciativa.miembrosCount || 1)} / {iniciativa.limiteColaboradores || 5} cupos
+          </span>
+        </div>
+        
       </div>
     </motion.button>
   );

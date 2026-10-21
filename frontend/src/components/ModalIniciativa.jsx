@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { X, Clock, CheckCircle2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -24,16 +24,18 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
   const navigate = useNavigate();
   const { usuario } = useAuth();
 
-  // Cerrar con Escape
+  // Cerrar con Escape y bloquear scroll
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKey);
+    
     document.body.style.overflow = 'hidden';
+    
     return () => {
       window.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'unset';
     };
   }, [onClose]);
 
@@ -42,9 +44,18 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
   const area = estiloPorArea[iniciativa.area] || estiloPorArea['otro'];
   const estado = etiquetaEstado[iniciativa.estado] || etiquetaEstado['abierta'];
 
-  // ¿Es el líder de esta iniciativa?
   const esLider = iniciativa.lider?.email === usuario?.email;
-  const puedePostularse = !esLider && iniciativa.estado === 'abierta';
+  
+  // Lógica para saber si ya está lleno (usando los datos que inyectamos en el backend)
+  const miembrosActuales = iniciativa.miembrosCount || 1;
+  const limite = iniciativa.limiteColaboradores || 5;
+  const cuposLlenos = miembrosActuales >= limite;
+
+  // ¿Puede postularse? (No es líder, está abierta, no está lleno, y no se ha postulado)
+  const puedePostularse = !esLider && iniciativa.estado === 'abierta' && !cuposLlenos && !iniciativa.postulado;
+  
+  // ¿Ya se postuló?
+  const yaPostulado = iniciativa.postulado;
 
   return (
     <AnimatePresence>
@@ -186,12 +197,20 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
                   {iniciativa.postulacionesCount || 0}
                 </p>
               </div>
+              <div>
+                <p className="text-nexo-muted text-xs uppercase tracking-wider mb-1">
+                  Cupos
+                </p>
+                <p className="text-sm text-nexo-text/80 font-medium mt-1">
+                  {miembrosActuales} / {limite}
+                </p>
+              </div>
               {iniciativa.fechaCierre && (
                 <div>
                   <p className="text-nexo-muted text-xs uppercase tracking-wider mb-1">
                     Fecha de cierre
                   </p>
-                  <p className="text-sm text-nexo-text/80">
+                  <p className="text-sm text-nexo-text/80 mt-1">
                     {new Date(iniciativa.fechaCierre).toLocaleDateString('es-CO', {
                       year: 'numeric',
                       month: 'long',
@@ -204,6 +223,16 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
 
             {/* Acciones */}
             <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/5">
+              
+              {/* Si ya está postulado */}
+              {yaPostulado && (
+                <div className="flex-1 text-center py-2.5 rounded-lg bg-amber-400/10 border border-amber-400/20 text-amber-400 text-sm font-medium flex items-center justify-center gap-2">
+                  <Clock size={16} />
+                  Postulación enviada. Esperando respuesta.
+                </div>
+              )}
+
+              {/* Si puede postularse */}
               {puedePostularse && (
                 <button
                   onClick={() => navigate(`/iniciativa/${iniciativa._id}`)}
@@ -213,6 +242,7 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
                 </button>
               )}
 
+              {/* Si es líder */}
               {esLider && (
                 <button
                   onClick={() => navigate(`/iniciativa/${iniciativa._id}`)}
@@ -222,9 +252,10 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
                 </button>
               )}
 
-              {!puedePostularse && !esLider && iniciativa.estado !== 'abierta' && (
-                <div className="flex-1 text-center py-2.5 text-nexo-muted text-sm">
-                  Esta iniciativa ya no acepta postulaciones
+              {/* Si no está abierta o está llena (y no es líder ni postulado) */}
+              {!puedePostularse && !esLider && !yaPostulado && (
+                <div className="flex-1 text-center py-2.5 rounded-lg bg-white/5 text-nexo-muted text-sm">
+                  {cuposLlenos ? 'El equipo está completo' : 'Esta iniciativa ya no acepta postulaciones'}
                 </div>
               )}
             </div>

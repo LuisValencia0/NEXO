@@ -1,3 +1,4 @@
+import { Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -43,6 +44,7 @@ export default function DetalleIniciativa() {
   const [postulaciones, setPostulaciones] = useState([]);
   const [panelAbierto, setPanelAbierto] = useState(false);
   const [procesando, setProcesando] = useState(null);
+  const [equipo, setEquipo] = useState(null);
 
   useEffect(() => {
     const cargar = async () => {
@@ -50,12 +52,20 @@ export default function DetalleIniciativa() {
         const { data } = await api.get(`/iniciativas/${id}`);
         setIniciativa(data);
 
-        // Si soy el líder, cargar las postulaciones recibidas
+        // Si soy el líder, cargar las postulaciones recibidas Y el equipo
         const soyLider = data.lider?.email === usuario?.email;
         if (soyLider) {
           try {
             const { data: posts } = await api.get(`/solicitudes/iniciativa/${id}`);
             setPostulaciones(posts);
+            
+            // NUEVO: Cargar el equipo actual
+            try {
+              const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
+              setEquipo(eq);
+            } catch {
+              // Si el equipo no existe aún, lo dejamos en null
+            }
           } catch {
             // Silencioso
           }
@@ -115,14 +125,70 @@ export default function DetalleIniciativa() {
     try {
       const { data } = await api.put(`/solicitudes/${solicitudId}/${accion}`);
 
-      // Actualizar la lista local
+      // Actualizar el estado visual de la tarjeta de postulación
       setPostulaciones(prev =>
         prev.map(p => p._id === solicitudId ? { ...p, estado: data.solicitud.estado } : p)
       );
+
+      // Si fue aceptada, recargar el equipo
+      if (accion === 'aceptar') {
+        try {
+          const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
+          setEquipo(eq);
+          
+          // Si el equipo se llenó, actualizamos el limite visualmente
+          // (El backend ya lo aceptó, así que forzamos el límite a los miembros actuales si era menor)
+          if (eq.miembros.length > iniciativa.limiteColaboradores) {
+             setIniciativa(prev => ({ ...prev, limiteColaboradores: eq.miembros.length }));
+          }
+
+        } catch (error) {
+          console.error("Error al recargar el equipo", error);
+        }
+      }
     } catch (err) {
-      alert(err.response?.data?.error || `Error al ${accion} la postulación`);
+      const errorMsg = err.response?.data?.error;
+      
+      // SI EL EQUIPO ESTÁ LLENO: Lo ampliamos y reintentamos automáticamente
+      if (accion === 'aceptar' && errorMsg && errorMsg.includes('lleno')) {
+        try {
+          // 1. Ampliamos el límite en el backend
+          const nuevoLimite = (iniciativa.limiteColaboradores || 1) + 1;
+          await api.put(`/iniciativas/${id}/limite`, { nuevoLimite });
+          
+          // 2. Reintentamos aceptar
+          await api.put(`/solicitudes/${solicitudId}/${accion}`);
+          
+          // 3. Recargamos la data visual
+          const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
+          setEquipo(eq);
+          setPostulaciones(prev =>
+            prev.map(p => p._id === solicitudId ? { ...p, estado: 'aceptada' } : p)
+          );
+          setIniciativa(prev => ({ ...prev, limiteColaboradores: nuevoLimite }));
+
+        } catch (retryError) {
+          alert(retryError.response?.data?.error || 'Error al intentar ampliar el cupo automáticamente');
+        }
+      } else {
+        alert(errorMsg || `Error al ${accion} la postulación`);
+      }
     } finally {
       setProcesando(null);
+    }
+  };
+
+  const actualizarLimite = async (nuevoLimite) => {
+    try {
+      const { data } = await api.put(`/iniciativas/${id}/limite`, { nuevoLimite: Number(nuevoLimite) });
+      
+      // Actualizamos el estado local para que se refleje de inmediato
+      setIniciativa(prev => ({
+        ...prev,
+        limiteColaboradores: data.limiteColaboradores
+      }));
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al cambiar el límite');
     }
   };
 
@@ -393,6 +459,22 @@ export default function DetalleIniciativa() {
             <h2 className="text-2xl font-bold">Gestión de la iniciativa</h2>
           </div>
 
+          {/* Código de acceso (solo si es privada) */}
+          {iniciativa.visibilidad === 'privada' && iniciativa.codigoAcceso && (
+            <div className="card-nexo bg-purple-500/5 border-purple-500/20 mb-6">
+              <h3 className="text-sm uppercase tracking-wider text-purple-400 mb-2 flex items-center gap-2">
+                <Lock size={14} strokeWidth={2} />
+                Código de acceso
+              </h3>
+              <p className="text-2xl font-mono font-bold text-purple-300 tracking-wider">
+                {iniciativa.codigoAcceso}
+              </p>
+              <p className="text-xs text-nexo-muted mt-2">
+                Comparte este código solo con las personas que quieras invitar.
+              </p>
+            </div>
+          )}
+
           {/* Postulaciones */}
           <div className="card-nexo">
             <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
@@ -481,6 +563,62 @@ export default function DetalleIniciativa() {
             )}
           </div>
 
+          {/* Gestión de cupos y equipo */}
+          <div className="card-nexo mt-6">
+              <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
+                <Users size={14} strokeWidth={2} />
+                Equipo actual ({equipo?.miembros?.length || 1} / {iniciativa.limiteColaboradores || 5} cupos)
+              </h3>
+              
+              <div className="space-y-3 mb-6">
+                {/* Líder siempre primero */}
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-nexo-accent flex items-center justify-center text-white text-xs">L</div>
+                  <span className="text-sm flex-1">{iniciativa.lider.nombre} (Líder)</span>
+                </div>
+                {/* Miembros */}
+                {equipo?.miembros?.filter(m => m._id !== iniciativa.lider._id).map(m => (
+                  <div key={m._id} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-nexo-accent-2 flex items-center justify-center text-white text-xs">
+                        {m.nombre.charAt(0)}
+                      </div>
+                      <span className="text-sm">{m.nombre}</span>
+                    </div>
+
+                    {/* Controles para cambiar límite */}
+                    <div className="pt-4 border-t border-nexo-border flex items-center justify-between">
+                      <span className="text-sm text-nexo-muted">Límite de colaboradores:</span>
+                      
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => actualizarLimite((iniciativa.limiteColaboradores || 5) - 1)}
+                          disabled={(iniciativa.limiteColaboradores || 5) <= (equipo?.miembros?.length || 1)}
+                          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-nexo-text transition-colors"
+                        >
+                          -
+                        </button>
+                        
+                        <span className="font-bold text-lg min-w-[20px] text-center">
+                          {iniciativa.limiteColaboradores || 5}
+                        </span>
+                        
+                        <button
+                          onClick={() => actualizarLimite((iniciativa.limiteColaboradores || 5) + 1)}
+                          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-nexo-text transition-colors"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Botón de retirar (lo conectamos después) */}
+                    <button className="text-xs text-red-400 hover:underline">Retirar</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
         </motion.div>
       )}
 
@@ -547,4 +685,5 @@ export default function DetalleIniciativa() {
 
     </div>
   );
-}
+} 
+

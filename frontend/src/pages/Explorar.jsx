@@ -13,13 +13,51 @@ export default function Explorar() {
   const [error, setError] = useState('');
   const [areaActiva, setAreaActiva] = useState('todas');
   const [seleccionada, setSeleccionada] = useState(null);
+  const [codigo, setCodigo] = useState('');
+
+  const unirseConCodigo = async (e) => {
+    e.preventDefault();
+    if (!codigo.trim()) return;
+    try {
+      await api.post('/iniciativas/unirse-codigo', { codigo });
+      alert('¡Te has postulado correctamente!');
+      setCodigo('');
+      window.location.reload(); // Recargar para que aparezca en la lista
+    } catch (err) {
+      alert(err.response?.data?.error || 'Código inválido');
+    }
+  };
 
   useEffect(() => {
     const cargar = async () => {
       try {
-        const { data } = await api.get('/iniciativas');
-        const visibles = data.filter(i => i.estado !== 'eliminada');
-        setIniciativas(visibles);
+        // 1. Traer las iniciativas
+        const { data: inis } = await api.get('/iniciativas');
+        const visibles = inis.filter(i => i.estado !== 'eliminada');
+
+        // 2. Traer mis solicitudes
+        let misAceptadas = [];
+        let misPostuladas = [];
+        try {
+          const { data: misSol } = await api.get('/solicitudes/mias');
+          
+          // Filtramos las aceptadas
+          misAceptadas = misSol.filter(s => s.estado === 'aceptada').map(s => s.iniciativa?._id || s.iniciativa);
+          
+          // Filtramos las que están pendientes
+          misPostuladas = misSol.filter(s => s.estado === 'pendiente').map(s => s.iniciativa?._id || s.iniciativa);
+        } catch {
+          // Si no está logueado o falla
+        }
+
+        // 3. Marcar las iniciativas con su estado
+        const inisConEstado = visibles.map(ini => ({
+          ...ini,
+          pertenezco: misAceptadas.includes(ini._id),
+          postulado: misPostuladas.includes(ini._id) && !misAceptadas.includes(ini._id) // Si ya es miembro, no importa el postulado
+        }));
+
+        setIniciativas(inisConEstado);
       } catch (err) {
         setError(err.response?.data?.error || 'Error al cargar iniciativas');
       } finally {
@@ -35,7 +73,7 @@ export default function Explorar() {
   }, [iniciativas, areaActiva]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-20">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -59,6 +97,20 @@ export default function Explorar() {
 
       {/* Filtros */}
       <FiltroAreas activa={areaActiva} onChange={setAreaActiva} />
+
+      {/* Unirse con código (NUEVO) */}
+      <form onSubmit={unirseConCodigo} className="flex gap-2 max-w-md">
+        <input
+          type="text"
+          value={codigo}
+          onChange={(e) => setCodigo(e.target.value)}
+          placeholder="¿Tienes un código? Ej: NEXO-A1B2"
+          className="input-base"
+        />
+        <button type="submit" className="btn-secondary whitespace-nowrap">
+          Unirme
+        </button>
+      </form>
 
       {/* Estados */}
       {cargando && (

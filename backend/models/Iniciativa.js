@@ -15,6 +15,7 @@ const IniciativaSchema = new mongoose.Schema({
     default: 'abierta'
   },
   colaboradoresRequeridos: { type: [String], default: [] },
+  limiteColaboradores: { type: Number, default: 5, min: 1 },
   habilidadesBuscadas:     { type: [String], default: [] },
   fechaCierre: { type: Date },
   fechaCierreReal: { type: Date, default: null },
@@ -24,11 +25,18 @@ const IniciativaSchema = new mongoose.Schema({
   postulacionesCount: { type: Number, default: 0 },
 
   // Hueco para el futuro (privacidad de la iniciativa)
+  // Pública (aparece en explorar) o Privada (solo con código)
   visibilidad: {
     type: String,
     enum: ['publica', 'privada'],
     default: 'publica'
-  }
+  },
+  
+  // Código de acceso (solo si es privada)
+  codigoAcceso: {
+    type: String,
+    default: null
+  },
 
 }, { timestamps: true });
 

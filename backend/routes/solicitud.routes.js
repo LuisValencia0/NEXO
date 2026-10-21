@@ -138,12 +138,22 @@ router.put('/:id/aceptar', verificarToken, async (req, res) => {
       return res.status(403).json({ error: 'Solo el líder puede aceptar postulaciones' });
     }
 
-    // 1. Cambiar estado de la solicitud
+    // Verificar límite de cupos
+    const equipo = await Equipo.findOne({ iniciativa: sol.iniciativa._id });
+    const miembrosActuales = equipo ? equipo.miembros.length : 1;
+    const limite = sol.iniciativa.limiteColaboradores || 5;
+
+    if (miembrosActuales >= limite) {
+      return res.status(400).json({
+        error: 'El equipo está lleno. Amplía el límite o retira a un miembro para aceptar a alguien más.'
+      });
+    }
+
+    // Aceptar
     sol.estado = 'aceptada';
     await sol.save();
 
-    // 2. Agregar al usuario al equipo (si no está ya)
-    const equipo = await Equipo.findOne({ iniciativa: sol.iniciativa._id });
+    // Agregar al equipo
     if (equipo && !equipo.miembros.some(m => m.toString() === sol.usuario.toString())) {
       equipo.miembros.push(sol.usuario);
       await equipo.save();
