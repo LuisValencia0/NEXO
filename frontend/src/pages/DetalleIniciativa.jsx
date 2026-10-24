@@ -125,25 +125,18 @@ export default function DetalleIniciativa() {
     try {
       const { data } = await api.put(`/solicitudes/${solicitudId}/${accion}`);
 
-      // Actualizar el estado visual de la tarjeta de postulación
+      // 1. Actualizar el estado visual de la tarjeta de postulación
       setPostulaciones(prev =>
         prev.map(p => p._id === solicitudId ? { ...p, estado: data.solicitud.estado } : p)
       );
 
-      // Si fue aceptada, recargar el equipo
-      if (accion === 'aceptar') {
-        try {
-          const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
-          setEquipo(eq);
-          
-          // Si el equipo se llenó, actualizamos el limite visualmente
-          // (El backend ya lo aceptó, así que forzamos el límite a los miembros actuales si era menor)
-          if (eq.miembros.length > iniciativa.limiteColaboradores) {
-             setIniciativa(prev => ({ ...prev, limiteColaboradores: eq.miembros.length }));
-          }
-
-        } catch (error) {
-          console.error("Error al recargar el equipo", error);
+      // 2. Si fue aceptada, el backend nos devolvió el equipo actualizado
+      if (accion === 'aceptar' && data.equipo) {
+        setEquipo(data.equipo);
+        
+        // Si el equipo se llenó, actualizamos el limite visualmente
+        if (data.equipo.miembros.length > iniciativa.limiteColaboradores) {
+           setIniciativa(prev => ({ ...prev, limiteColaboradores: data.equipo.miembros.length }));
         }
       }
     } catch (err) {
@@ -152,19 +145,20 @@ export default function DetalleIniciativa() {
       // SI EL EQUIPO ESTÁ LLENO: Lo ampliamos y reintentamos automáticamente
       if (accion === 'aceptar' && errorMsg && errorMsg.includes('lleno')) {
         try {
-          // 1. Ampliamos el límite en el backend
           const nuevoLimite = (iniciativa.limiteColaboradores || 1) + 1;
           await api.put(`/iniciativas/${id}/limite`, { nuevoLimite });
           
-          // 2. Reintentamos aceptar
-          await api.put(`/solicitudes/${solicitudId}/${accion}`);
+          // Reintentamos aceptar
+          const { data: retryData } = await api.put(`/solicitudes/${solicitudId}/${accion}`);
           
-          // 3. Recargamos la data visual
-          const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
-          setEquipo(eq);
+          // Actualizamos todo con la respuesta del reintento
           setPostulaciones(prev =>
             prev.map(p => p._id === solicitudId ? { ...p, estado: 'aceptada' } : p)
           );
+          
+          if (retryData.equipo) {
+            setEquipo(retryData.equipo);
+          }
           setIniciativa(prev => ({ ...prev, limiteColaboradores: nuevoLimite }));
 
         } catch (retryError) {
@@ -175,6 +169,38 @@ export default function DetalleIniciativa() {
       }
     } finally {
       setProcesando(null);
+    }
+  };
+
+  const salirDelEquipo = async () => {
+    const confirmacion = prompt('Para salir del equipo, escribe la palabra: SALIR');
+    if (confirmacion !== 'SALIR') {
+      if (confirmacion !== null) alert('Confirmación incorrecta. No has salido del equipo.');
+      return;
+    }
+
+    try {
+      // Necesitamos el ID del equipo. Lo tenemos en el estado 'equipo'
+      await api.delete(`/equipos/${equipo._id}/salir`, {
+        data: { confirmacion: 'SALIR' }
+      });
+      
+      alert('Has salido del equipo correctamente.');
+      // Redirigir al explorar o recargar
+      window.location.reload();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al salir del equipo');
+    }
+  };
+
+  const cancelarPostulacion = async () => {
+    if (!window.confirm('¿Seguro que quieres cancelar tu postulación?')) return;
+    try {
+      await api.delete(`/solicitudes/${miSolicitud._id}`);
+      alert('Postulación cancelada.');
+      window.location.reload();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error al cancelar');
     }
   };
 
@@ -406,7 +432,7 @@ export default function DetalleIniciativa() {
                         ? 'Postulación enviada'
                         : 'Postulación procesada'}
                   </p>
-                  <p className="text-xs text-nexo-muted">
+                  <p className="text-xs text-nexo-muted mb-4">
                     {miSolicitud.estado === 'aceptada'
                       ? 'Ya eres parte de este equipo.'
                       : miSolicitud.estado === 'pendiente'
@@ -415,6 +441,26 @@ export default function DetalleIniciativa() {
                           ? 'El líder decidió no aceptarla.'
                           : 'Estado actualizado.'}
                   </p>
+
+                  {/* Botón de Cancelar (solo si está pendiente) */}
+                  {miSolicitud.estado === 'pendiente' && (
+                    <button
+                      onClick={cancelarPostulacion}
+                      className="text-sm text-red-400 hover:text-red-300 hover:underline transition-colors mt-2"
+                    >
+                      Cancelar mi postulación
+                    </button>
+                  )}
+
+                  {/* Botón de Salir (solo si está aceptado) */}
+                  {miSolicitud.estado === 'aceptada' && (
+                    <button
+                      onClick={salirDelEquipo}
+                      className="text-sm text-red-400 hover:text-red-300 hover:underline transition-colors mt-2"
+                    >
+                      Salir del equipo
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -612,8 +658,24 @@ export default function DetalleIniciativa() {
                       </div>
                     </div>
 
-                    {/* Botón de retirar (lo conectamos después) */}
-                    <button className="text-xs text-red-400 hover:underline">Retirar</button>
+                    <button 
+                      onClick={async () => {
+                        const conf = prompt('Escribe RETIRAR para confirmar');
+                        if (conf !== 'RETIRAR') return;
+                        try {
+                          await api.delete(`/equipos/${equipo._id}/finalizar/${m._id}`, {
+                            data: { confirmacion: 'RETIRAR' }
+                          });
+                          alert('Miembro retirado');
+                          window.location.reload();
+                        } catch (err) {
+                          alert(err.response?.data?.error || 'Error');
+                        }
+                      }}
+                      className="text-xs text-red-400 hover:underline"
+                    >
+                      Retirar
+                    </button>
                   </div>
                 ))}
               </div>

@@ -139,7 +139,7 @@ router.put('/:id/aceptar', verificarToken, async (req, res) => {
     }
 
     // Verificar límite de cupos
-    const equipo = await Equipo.findOne({ iniciativa: sol.iniciativa._id });
+    let equipo = await Equipo.findOne({ iniciativa: sol.iniciativa._id });
     const miembrosActuales = equipo ? equipo.miembros.length : 1;
     const limite = sol.iniciativa.limiteColaboradores || 5;
 
@@ -149,7 +149,6 @@ router.put('/:id/aceptar', verificarToken, async (req, res) => {
       });
     }
 
-    // Aceptar
     sol.estado = 'aceptada';
     await sol.save();
 
@@ -158,8 +157,15 @@ router.put('/:id/aceptar', verificarToken, async (req, res) => {
       equipo.miembros.push(sol.usuario);
       await equipo.save();
     }
+    
+    // RECARGAMOS EL EQUIPO CON LOS DATOS POPULADOS
+    equipo = await Equipo.findOne({ iniciativa: sol.iniciativa._id }).populate('miembros', 'nombre email');
 
-    res.json({ mensaje: 'Solicitud aceptada', solicitud: sol });
+    res.json({ 
+      mensaje: 'Solicitud aceptada', 
+      solicitud: sol,
+      equipo: equipo // <-- Enviamos el equipo actualizado de vuelta
+    });
 
   } catch (err) {
     res.status(500).json({ error: err.message });

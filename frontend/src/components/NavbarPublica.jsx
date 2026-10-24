@@ -14,10 +14,12 @@ export default function NavbarPublica() {
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-nexo-accent-3 to-nexo-accent-2 flex items-center justify-center">
-            <div className="w-3 h-3 rounded-full bg-nexo-bg" />
-          </div>
+      <Link to="/" className="flex items-center gap-2">
+          <img 
+            src="/icono.png" 
+            alt="NEXO" 
+            className="w-8 h-8 object-contain" 
+          />
           <span className="text-xl font-bold bg-gradient-to-r from-nexo-accent-3 via-nexo-accent to-nexo-accent-2 bg-clip-text text-transparent">
             NEXO
           </span>
