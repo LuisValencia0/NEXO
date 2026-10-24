@@ -70,4 +70,4 @@ const SolicitudSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = mongoose.model('Solicitud', SolicitudSchema);
+module.exports = mongoose.model('Solicitud', SolicitudSchema, 'solicitudes');

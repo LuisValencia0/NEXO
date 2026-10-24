@@ -241,6 +241,8 @@ export default function DetalleIniciativa() {
   const estado = etiquetaEstado[iniciativa.estado] || etiquetaEstado['abierta'];
   const esLider = iniciativa.lider?.email === usuario?.email;
   const puedePostularse = !esLider && iniciativa.estado === 'abierta' && !miSolicitud;
+  // Filtramos para que el líder solo vea las que están pendientes de revisar
+  const postulacionesPendientes = postulaciones.filter(p => p.estado === 'pendiente');
 
   return (
     <div className="space-y-8">
@@ -525,7 +527,7 @@ export default function DetalleIniciativa() {
           <div className="card-nexo">
             <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
               <Users size={14} strokeWidth={2} />
-              Postulaciones recibidas ({postulaciones.length})
+              Postulaciones recibidas ({postulacionesPendientes.length})
             </h3>
 
             {postulaciones.length === 0 ? (

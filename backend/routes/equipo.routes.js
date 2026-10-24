@@ -6,6 +6,20 @@ const Entorno = require('../models/Entorno');
 const Solicitud = require('../models/Solicitud');
 const verificarToken = require('../middleware/auth');
 
+
+// GET /api/equipos/iniciativa/:id
+router.get('/iniciativa/:id', verificarToken, async (req, res) => {
+  try {
+    const equipo = await Equipo.findOne({ iniciativa: req.params.id })
+      .populate('miembros', 'nombre email');
+    if (!equipo) return res.status(404).json({ error: 'Equipo no encontrado' });
+    res.json(equipo);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // =========================================================
 // GET /api/equipos/mios
 // Equipos donde participo (como líder o miembro)
@@ -198,18 +212,6 @@ router.put('/:id/ceder-liderazgo', verificarToken, async (req, res) => {
       nuevoLider
     });
 
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// GET /api/equipos/iniciativa/:id
-router.get('/iniciativa/:id', verificarToken, async (req, res) => {
-  try {
-    const equipo = await Equipo.findOne({ iniciativa: req.params.id })
-      .populate('miembros', 'nombre email');
-    if (!equipo) return res.status(404).json({ error: 'Equipo no encontrado' });
-    res.json(equipo);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
