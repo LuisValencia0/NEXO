@@ -33,13 +33,18 @@ router.get('/:id', verificarToken, async (req, res) => {
   try {
     const entorno = await Entorno.findById(req.params.id)
       .populate('iniciativa', 'titulo area estado lider')
-      .populate('equipo', 'lider miembros activo');
+      .populate({
+        path: 'equipo',
+        select: 'lider miembros activo',
+        populate: { path: 'miembros', select: 'nombre email' } // Traemos nombre y email de los miembros
+      });
 
     if (!entorno) return res.status(404).json({ error: 'Entorno no encontrado' });
 
-    // Verificar que el usuario sea miembro del equipo
+    // Verificar que el usuario sea miembro del equipo.
+    // NOTA: Como usamos populate, 'm' es un objeto, por eso usamos m._id.toString()
     const esMiembro = entorno.equipo.miembros.some(
-      m => m.toString() === req.usuario.id
+      m => m._id.toString() === req.usuario.id
     );
 
     if (!esMiembro) {

@@ -1,5 +1,5 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Compass, Sprout, Inbox, Users, LogOut } from 'lucide-react';
+import { Compass, Sprout, LayoutDashboard, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -39,13 +39,11 @@ export default function Navbar() {
             <Sprout size={16} strokeWidth={1.8} />
             Mis iniciativas
           </NavLink>
-          <NavLink to="/mis-solicitudes" className={linkClass}>
-            <Inbox size={16} strokeWidth={1.8} />
-            Solicitudes
-          </NavLink>
+          
+          {/* REEMPLAZAMOS SOLICITUDES Y EQUIPOS POR MIS ENTORNOS */}
           <NavLink to="/mis-equipos" className={linkClass}>
-            <Users size={16} strokeWidth={1.8} />
-            Equipos
+            <LayoutDashboard size={16} strokeWidth={1.8} />
+            Mis Entornos
           </NavLink>
         </div>
 

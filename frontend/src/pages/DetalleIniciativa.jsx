@@ -26,6 +26,12 @@ const etiquetaEstado = {
   'eliminada':  { texto: 'Eliminada',  color: '#ef4444' },
 };
 
+const estadoPostulacion = {
+  'pendiente': { texto: 'Pendiente', color: '#ffb347', icono: Clock },
+  'aceptada':  { texto: 'Aceptada',  color: '#4ade80', icono: CheckCircle2 },
+  'rechazada': { texto: 'Rechazada', color: '#ef4444', icono: XCircle },
+};
+
 export default function DetalleIniciativa() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -52,27 +58,22 @@ export default function DetalleIniciativa() {
         const { data } = await api.get(`/iniciativas/${id}`);
         setIniciativa(data);
 
-        // Si soy el líder, cargar las postulaciones recibidas Y el equipo
         const soyLider = data.lider?.email === usuario?.email;
+
         if (soyLider) {
           try {
             const { data: posts } = await api.get(`/solicitudes/iniciativa/${id}`);
             setPostulaciones(posts);
-            
-            // NUEVO: Cargar el equipo actual
-            try {
-              const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
-              setEquipo(eq);
-            } catch {
-              // Si el equipo no existe aún, lo dejamos en null
-            }
           } catch {
             // Silencioso
           }
-        }
-
-        // Si no soy el líder, buscar mi propia postulación
-        if (!soyLider) {
+          try {
+            const { data: eq } = await api.get(`/equipos/iniciativa/${id}`);
+            setEquipo(eq);
+          } catch {
+            // Si el equipo no existe aún, lo dejamos en null
+          }
+        } else {
           try {
             const { data: solicitudes } = await api.get('/solicitudes/mias');
             const activa = solicitudes.find(
@@ -93,6 +94,17 @@ export default function DetalleIniciativa() {
     cargar();
   }, [id, usuario]);
 
+  // Si no hay postulaciones, el panel de gestión no tiene sentido abierto
+  useEffect(() => {
+    if (postulaciones.length === 0) setPanelAbierto(false);
+  }, [postulaciones]);
+
+  // Bloquear scroll del body cuando el modal está abierto
+  useEffect(() => {
+    document.body.style.overflow = modalAbierto ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [modalAbierto]);
+
   const postularse = async () => {
     setEnviando(true);
     try {
@@ -100,19 +112,13 @@ export default function DetalleIniciativa() {
         iniciativa: id,
         mensaje: mensaje.trim(),
       });
-
-      // Actualizar mi solicitud
       setMiSolicitud(data);
-
-      // Actualizar el contador en la iniciativa
       setIniciativa(prev => ({
         ...prev,
         postulacionesCount: (prev.postulacionesCount || 0) + 1,
       }));
-
       setModalAbierto(false);
       setMensaje('');
-
     } catch (err) {
       alert(err.response?.data?.error || 'Error al postularse');
     } finally {
@@ -125,42 +131,35 @@ export default function DetalleIniciativa() {
     try {
       const { data } = await api.put(`/solicitudes/${solicitudId}/${accion}`);
 
-      // 1. Actualizar el estado visual de la tarjeta de postulación
+      // La postulación se mueve de "pendiente" a "aceptada"/"rechazada"
+      // (sigue en el array, pero la UI la agrupa por estado)
       setPostulaciones(prev =>
         prev.map(p => p._id === solicitudId ? { ...p, estado: data.solicitud.estado } : p)
       );
 
-      // 2. Si fue aceptada, el backend nos devolvió el equipo actualizado
       if (accion === 'aceptar' && data.equipo) {
         setEquipo(data.equipo);
-        
-        // Si el equipo se llenó, actualizamos el limite visualmente
         if (data.equipo.miembros.length > iniciativa.limiteColaboradores) {
            setIniciativa(prev => ({ ...prev, limiteColaboradores: data.equipo.miembros.length }));
         }
       }
     } catch (err) {
       const errorMsg = err.response?.data?.error;
-      
+
       // SI EL EQUIPO ESTÁ LLENO: Lo ampliamos y reintentamos automáticamente
       if (accion === 'aceptar' && errorMsg && errorMsg.includes('lleno')) {
         try {
           const nuevoLimite = (iniciativa.limiteColaboradores || 1) + 1;
           await api.put(`/iniciativas/${id}/limite`, { nuevoLimite });
-          
-          // Reintentamos aceptar
+
           const { data: retryData } = await api.put(`/solicitudes/${solicitudId}/${accion}`);
-          
-          // Actualizamos todo con la respuesta del reintento
+
           setPostulaciones(prev =>
             prev.map(p => p._id === solicitudId ? { ...p, estado: 'aceptada' } : p)
           );
-          
-          if (retryData.equipo) {
-            setEquipo(retryData.equipo);
-          }
-          setIniciativa(prev => ({ ...prev, limiteColaboradores: nuevoLimite }));
 
+          if (retryData.equipo) setEquipo(retryData.equipo);
+          setIniciativa(prev => ({ ...prev, limiteColaboradores: nuevoLimite }));
         } catch (retryError) {
           alert(retryError.response?.data?.error || 'Error al intentar ampliar el cupo automáticamente');
         }
@@ -173,23 +172,42 @@ export default function DetalleIniciativa() {
   };
 
   const salirDelEquipo = async () => {
+    if (!equipo?._id) {
+      alert('No se pudo identificar el equipo. Recarga la página.');
+      return;
+    }
     const confirmacion = prompt('Para salir del equipo, escribe la palabra: SALIR');
     if (confirmacion !== 'SALIR') {
       if (confirmacion !== null) alert('Confirmación incorrecta. No has salido del equipo.');
       return;
     }
-
     try {
-      // Necesitamos el ID del equipo. Lo tenemos en el estado 'equipo'
       await api.delete(`/equipos/${equipo._id}/salir`, {
         data: { confirmacion: 'SALIR' }
       });
-      
       alert('Has salido del equipo correctamente.');
-      // Redirigir al explorar o recargar
-      window.location.reload();
+      setMiSolicitud(null);
+      setEquipo(null);
     } catch (err) {
       alert(err.response?.data?.error || 'Error al salir del equipo');
+    }
+  };
+
+  const retirarMiembro = async (miembroId) => {
+    if (!equipo?._id) return;
+    const conf = prompt('Escribe RETIRAR para confirmar');
+    if (conf !== 'RETIRAR') return;
+    try {
+      await api.delete(`/equipos/${equipo._id}/finalizar/${miembroId}`, {
+        data: { confirmacion: 'RETIRAR' }
+      });
+      setEquipo(prev => ({
+        ...prev,
+        miembros: prev.miembros.filter(m => m._id !== miembroId),
+      }));
+      alert('Miembro retirado');
+    } catch (err) {
+      alert(err.response?.data?.error || 'Error');
     }
   };
 
@@ -198,17 +216,20 @@ export default function DetalleIniciativa() {
     try {
       await api.delete(`/solicitudes/${miSolicitud._id}`);
       alert('Postulación cancelada.');
-      window.location.reload();
+      setMiSolicitud(null);
+      setIniciativa(prev => ({
+        ...prev,
+        postulacionesCount: Math.max((prev.postulacionesCount || 1) - 1, 0),
+      }));
     } catch (err) {
       alert(err.response?.data?.error || 'Error al cancelar');
     }
   };
 
   const actualizarLimite = async (nuevoLimite) => {
+    if (nuevoLimite < 1) return;
     try {
       const { data } = await api.put(`/iniciativas/${id}/limite`, { nuevoLimite: Number(nuevoLimite) });
-      
-      // Actualizamos el estado local para que se refleje de inmediato
       setIniciativa(prev => ({
         ...prev,
         limiteColaboradores: data.limiteColaboradores
@@ -241,8 +262,10 @@ export default function DetalleIniciativa() {
   const estado = etiquetaEstado[iniciativa.estado] || etiquetaEstado['abierta'];
   const esLider = iniciativa.lider?.email === usuario?.email;
   const puedePostularse = !esLider && iniciativa.estado === 'abierta' && !miSolicitud;
-  // Filtramos para que el líder solo vea las que están pendientes de revisar
-  const postulacionesPendientes = postulaciones.filter(p => p.estado === 'pendiente');
+
+  const pendientes = postulaciones.filter(p => p.estado === 'pendiente');
+  const procesadas = postulaciones.filter(p => p.estado !== 'pendiente');
+  const hayAlgoQueGestionar = pendientes.length > 0 || procesadas.length > 0;
 
   return (
     <div className="space-y-8">
@@ -404,7 +427,8 @@ export default function DetalleIniciativa() {
                   </p>
                   <button
                     onClick={() => setPanelAbierto(prev => !prev)}
-                    className="btn-primary w-full flex items-center justify-center gap-2"
+                    disabled={!hayAlgoQueGestionar}
+                    className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Settings size={16} strokeWidth={1.8} />
                     {panelAbierto ? 'Ocultar gestión' : 'Gestionar mi iniciativa'}
@@ -413,6 +437,11 @@ export default function DetalleIniciativa() {
                       : <ChevronDown size={16} strokeWidth={2} />
                     }
                   </button>
+                  {!hayAlgoQueGestionar && (
+                    <p className="text-xs text-nexo-muted text-center">
+                      Aún no hay postulaciones que gestionar.
+                    </p>
+                  )}
                 </>
               )}
 
@@ -444,7 +473,6 @@ export default function DetalleIniciativa() {
                           : 'Estado actualizado.'}
                   </p>
 
-                  {/* Botón de Cancelar (solo si está pendiente) */}
                   {miSolicitud.estado === 'pendiente' && (
                     <button
                       onClick={cancelarPostulacion}
@@ -454,7 +482,6 @@ export default function DetalleIniciativa() {
                     </button>
                   )}
 
-                  {/* Botón de Salir (solo si está aceptado) */}
                   {miSolicitud.estado === 'aceptada' && (
                     <button
                       onClick={salirDelEquipo}
@@ -495,8 +522,9 @@ export default function DetalleIniciativa() {
         </motion.div>
 
       </div>
-        {/* Panel de gestión del líder */}
-        {esLider && panelAbierto && (
+
+      {/* Panel de gestión del líder */}
+      {esLider && panelAbierto && hayAlgoQueGestionar && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -509,7 +537,7 @@ export default function DetalleIniciativa() {
 
           {/* Código de acceso (solo si es privada) */}
           {iniciativa.visibilidad === 'privada' && iniciativa.codigoAcceso && (
-            <div className="card-nexo bg-purple-500/5 border-purple-500/20 mb-6">
+            <div className="card-nexo bg-purple-500/5 border-purple-500/20">
               <h3 className="text-sm uppercase tracking-wider text-purple-400 mb-2 flex items-center gap-2">
                 <Lock size={14} strokeWidth={2} />
                 Código de acceso
@@ -523,165 +551,142 @@ export default function DetalleIniciativa() {
             </div>
           )}
 
-          {/* Postulaciones */}
+          {/* Postulaciones pendientes */}
           <div className="card-nexo">
             <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
-              <Users size={14} strokeWidth={2} />
-              Postulaciones recibidas ({postulacionesPendientes.length})
+              <Clock size={14} strokeWidth={2} />
+              Postulaciones pendientes ({pendientes.length})
             </h3>
-
-            {postulaciones.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock size={32} className="mx-auto text-nexo-muted mb-3" strokeWidth={1.5} />
-                <p className="text-nexo-muted text-sm">
-                  Aún no has recibido postulaciones.
-                </p>
-              </div>
+            {pendientes.length === 0 ? (
+              <p className="text-sm text-nexo-muted">No hay postulaciones por revisar.</p>
             ) : (
               <div className="space-y-3">
-                {postulaciones.map(post => (
-                  <div
-                    key={post._id}
-                    className="p-4 rounded-lg border border-nexo-border bg-white/[0.02]"
-                  >
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div
-                          className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-semibold"
-                          style={{ background: `linear-gradient(135deg, ${area.acento}, #b06dff)` }}
-                        >
-                          {post.usuario?.nombre?.charAt(0).toUpperCase() || '?'}
+                {pendientes.map(p => (
+                  <div key={p._id} className="flex items-start justify-between gap-4 p-3 rounded-lg bg-white/5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-8 h-8 rounded-full bg-nexo-accent-2 flex items-center justify-center text-white text-xs shrink-0">
+                          {p.usuario?.nombre?.charAt(0) || '?'}
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">
-                            {post.usuario?.nombre || 'Usuario'}
-                          </p>
-                          <p className="text-xs text-nexo-muted truncate flex items-center gap-1">
-                            <Mail size={11} strokeWidth={2} />
-                            {post.usuario?.email}
-                          </p>
-                        </div>
+                        <span className="font-medium text-sm truncate">{p.usuario?.nombre || 'Usuario'}</span>
                       </div>
-
-                      <span
-                        className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${
-                          post.estado === 'aceptada'
-                            ? 'bg-green-400/10 text-green-400'
-                            : post.estado === 'rechazada'
-                              ? 'bg-red-400/10 text-red-400'
-                              : 'bg-amber-400/10 text-amber-400'
-                        }`}
-                      >
-                        {post.estado === 'aceptada' ? 'Aceptada'
-                          : post.estado === 'rechazada' ? 'Rechazada'
-                          : 'Pendiente'}
-                      </span>
+                      {p.mensaje && (
+                        <p className="text-xs text-nexo-muted line-clamp-2 ml-10">{p.mensaje}</p>
+                      )}
                     </div>
-
-                    {post.mensaje && (
-                      <p className="text-sm text-nexo-muted mb-3 pl-13">
-                        "{post.mensaje}"
-                      </p>
-                    )}
-
-                    {/* Botones si está pendiente */}
-                    {post.estado === 'pendiente' && (
-                      <div className="flex gap-2 pt-3 border-t border-nexo-border">
-                        <button
-                          onClick={() => procesarPostulacion(post._id, 'aceptar')}
-                          disabled={procesando === post._id}
-                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium bg-green-400/10 text-green-400 hover:bg-green-400/20 transition-all disabled:opacity-50"
-                        >
-                          <CheckCircle2 size={15} strokeWidth={2} />
-                          Aceptar
-                        </button>
-                        <button
-                          onClick={() => procesarPostulacion(post._id, 'rechazar')}
-                          disabled={procesando === post._id}
-                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium bg-red-400/10 text-red-400 hover:bg-red-400/20 transition-all disabled:opacity-50"
-                        >
-                          <XCircle size={15} strokeWidth={2} />
-                          Rechazar
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-2 shrink-0">
+                      <button
+                        onClick={() => procesarPostulacion(p._id, 'aceptar')}
+                        disabled={procesando === p._id}
+                        className="p-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 disabled:opacity-50 transition-colors"
+                        title="Aceptar"
+                      >
+                        {procesando === p._id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                      </button>
+                      <button
+                        onClick={() => procesarPostulacion(p._id, 'rechazar')}
+                        disabled={procesando === p._id}
+                        className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 disabled:opacity-50 transition-colors"
+                        title="Rechazar"
+                      >
+                        {procesando === p._id ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Gestión de cupos y equipo */}
-          <div className="card-nexo mt-6">
-              <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
-                <Users size={14} strokeWidth={2} />
-                Equipo actual ({equipo?.miembros?.length || 1} / {iniciativa.limiteColaboradores || 5} cupos)
-              </h3>
-              
-              <div className="space-y-3 mb-6">
-                {/* Líder siempre primero */}
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-nexo-accent flex items-center justify-center text-white text-xs">L</div>
-                  <span className="text-sm flex-1">{iniciativa.lider.nombre} (Líder)</span>
-                </div>
-                {/* Miembros */}
-                {equipo?.miembros?.filter(m => m._id !== iniciativa.lider._id).map(m => (
-                  <div key={m._id} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-nexo-accent-2 flex items-center justify-center text-white text-xs">
-                        {m.nombre.charAt(0)}
-                      </div>
-                      <span className="text-sm">{m.nombre}</span>
-                    </div>
+          {/* Equipo actual */}
+          <div className="card-nexo">
+            <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
+              <Users size={14} strokeWidth={2} />
+              Equipo actual ({equipo?.miembros?.length || 1} / {iniciativa.limiteColaboradores || 5} cupos)
+            </h3>
 
-                    {/* Controles para cambiar límite */}
-                    <div className="pt-4 border-t border-nexo-border flex items-center justify-between">
-                      <span className="text-sm text-nexo-muted">Límite de colaboradores:</span>
-                      
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => actualizarLimite((iniciativa.limiteColaboradores || 5) - 1)}
-                          disabled={(iniciativa.limiteColaboradores || 5) <= (equipo?.miembros?.length || 1)}
-                          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-nexo-text transition-colors"
-                        >
-                          -
-                        </button>
-                        
-                        <span className="font-bold text-lg min-w-[20px] text-center">
-                          {iniciativa.limiteColaboradores || 5}
-                        </span>
-                        
-                        <button
-                          onClick={() => actualizarLimite((iniciativa.limiteColaboradores || 5) + 1)}
-                          className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-nexo-text transition-colors"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
+            <div className="space-y-3 mb-6">
+              {/* Líder siempre primero */}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-nexo-accent flex items-center justify-center text-white text-xs">L</div>
+                <span className="text-sm flex-1">{iniciativa.lider.nombre} (Líder)</span>
+              </div>
 
-                    <button 
-                      onClick={async () => {
-                        const conf = prompt('Escribe RETIRAR para confirmar');
-                        if (conf !== 'RETIRAR') return;
-                        try {
-                          await api.delete(`/equipos/${equipo._id}/finalizar/${m._id}`, {
-                            data: { confirmacion: 'RETIRAR' }
-                          });
-                          alert('Miembro retirado');
-                          window.location.reload();
-                        } catch (err) {
-                          alert(err.response?.data?.error || 'Error');
-                        }
-                      }}
-                      className="text-xs text-red-400 hover:underline"
-                    >
-                      Retirar
-                    </button>
+              {/* Miembros */}
+              {equipo?.miembros?.filter(m => m._id !== iniciativa.lider._id).map(m => (
+                <div key={m._id} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-nexo-accent-2 flex items-center justify-center text-white text-xs">
+                      {m.nombre.charAt(0)}
+                    </div>
+                    <span className="text-sm">{m.nombre}</span>
                   </div>
-                ))}
+                  <button
+                    onClick={() => retirarMiembro(m._id)}
+                    className="text-xs text-red-400 hover:underline"
+                  >
+                    Retirar
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Controles de límite (fuera del map) */}
+            <div className="pt-4 border-t border-nexo-border flex items-center justify-between">
+              <span className="text-sm text-nexo-muted">Límite de colaboradores:</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => actualizarLimite((iniciativa.limiteColaboradores || 5) - 1)}
+                  disabled={(iniciativa.limiteColaboradores || 5) <= (equipo?.miembros?.length || 1)}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center text-nexo-text transition-colors"
+                >
+                  -
+                </button>
+                <span className="font-bold text-lg min-w-[20px] text-center">
+                  {iniciativa.limiteColaboradores || 5}
+                </span>
+                <button
+                  onClick={() => actualizarLimite((iniciativa.limiteColaboradores || 5) + 1)}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-nexo-text transition-colors"
+                >
+                  +
+                </button>
               </div>
             </div>
+          </div>
+
+          {/* Postulaciones procesadas */}
+          {procesadas.length > 0 && (
+            <div className="card-nexo">
+              <h3 className="text-sm uppercase tracking-wider text-nexo-muted mb-4 flex items-center gap-2">
+                <CheckCircle2 size={14} strokeWidth={2} />
+                Postulaciones procesadas ({procesadas.length})
+              </h3>
+              <div className="space-y-2">
+                {procesadas.map(p => {
+                  const meta = estadoPostulacion[p.estado] || estadoPostulacion.pendiente;
+                  const Icono = meta.icono;
+                  return (
+                    <div key={p._id} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-white/[0.02]">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-nexo-accent-2 flex items-center justify-center text-white text-xs shrink-0">
+                          {p.usuario?.nombre?.charAt(0) || '?'}
+                        </div>
+                        <span className="text-sm truncate">{p.usuario?.nombre || 'Usuario'}</span>
+                      </div>
+                      <span
+                        className="flex items-center gap-1 text-xs font-medium shrink-0"
+                        style={{ color: meta.color }}
+                      >
+                        <Icono size={14} />
+                        {meta.texto}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
         </motion.div>
       )}
@@ -749,5 +754,4 @@ export default function DetalleIniciativa() {
 
     </div>
   );
-} 
-
+}
