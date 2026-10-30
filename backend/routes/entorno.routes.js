@@ -36,7 +36,8 @@ router.get('/:id', verificarToken, async (req, res) => {
       .populate({
         path: 'equipo',
         select: 'lider miembros activo',
-        populate: { path: 'miembros', select: 'nombre email' } // Traemos nombre y email de los miembros
+        populate: [{ path: 'lider', select: 'nombre email' }, 
+          { path: 'miembros', select: 'nombre email' }]// Traemos nombre y email de los miembros
       });
 
     if (!entorno) return res.status(404).json({ error: 'Entorno no encontrado' });

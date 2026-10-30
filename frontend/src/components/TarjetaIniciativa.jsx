@@ -1,4 +1,4 @@
-import { UserPlus, Users, CheckCircle2, Clock } from 'lucide-react';
+import { UserPlus, Users, CheckCircle2, Clock, Crown, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,10 +28,10 @@ export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
     <motion.button
       type="button"
       onClick={() => {
-        if (iniciativa.pertenezco) {
-          navigate(`/iniciativa/${iniciativa._id}`);
+        if (iniciativa.pertenezco && iniciativa.entornoId) {
+          navigate(`/entorno/${iniciativa.entornoId}`); // <-- Te lleva directo a tu oficina
         } else {
-          onClick?.(iniciativa);
+          onClick?.(iniciativa); // <-- Abre el modal para postularse
         }
       }}
       initial={{ opacity: 0, y: 20 }}
@@ -60,7 +60,7 @@ export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
         }}
       />
 
-      {/* Etiqueta de área */}
+      {/* Etiqueta de área y estados */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span
@@ -70,33 +70,32 @@ export default function TarjetaIniciativa({ iniciativa, index = 0, onClick }) {
             {iniciativa.area}
           </span>
           
-          {/* Chulito si ya perteneces */}
-          {iniciativa.pertenezco && (
-            <span 
-              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-green-400/10 text-green-400 border border-green-400/20"
-              title="Ya eres parte de este equipo"
-            >
-              <CheckCircle2 size={12} strokeWidth={2.5} />
+          {/* Si yo soy el líder/creador */}
+          {iniciativa.esMio && (
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-yellow-400/10 text-yellow-400 border border-yellow-400/20">
+              <Crown size={12} strokeWidth={2.5} />
+              Tu iniciativa
+            </span>
+          )}
+
+          {/* Si ya soy miembro (pero no líder) */}
+          {iniciativa.pertenezco && !iniciativa.esMio && (
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-green-400/10 text-green-400 border border-green-400/20">
+              <Briefcase size={12} strokeWidth={2.5} />
               En el equipo
             </span>
           )}
 
           {/* Relojito si ya postulaste pero no te han aceptado */}
-          {iniciativa.postulado && (
-            <span 
-              className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20"
-              title="Has enviado una postulación"
-            >
+          {iniciativa.postulado && !iniciativa.pertenezco && (
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-400/10 text-amber-400 border border-amber-400/20">
               <Clock size={12} strokeWidth={2.5} />
               Postulado
             </span>
           )}
         </div>
         
-        <span
-          className="text-xs font-medium"
-          style={{ color: estado.color }}
-        >
+        <span className="text-xs font-medium whitespace-nowrap ml-2" style={{ color: estado.color }}>
           • {estado.texto}
         </span>
       </div>

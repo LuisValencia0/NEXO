@@ -52,10 +52,25 @@ export default function MisEntornos() {
               }}
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-lg"
-                  style={{ background: `linear-gradient(135deg, ${ent.colorPrimario}, ${ent.colorSecundario})` }}>
-                  {ent.icono || '🏠'}
-                </div>
+              <div className="w-14 h-14 shrink-0 flex items-center justify-center overflow-hidden shadow-lg transition-transform duration-300 group-hover:scale-105"
+                style={{ 
+                  background: `linear-gradient(135deg, ${ent.colorPrimario}, ${ent.colorSecundario})`,
+                  boxShadow: `0 8px 20px -6px ${ent.colorPrimario}80`,
+                  clipPath: 'polygon(50% 0%, 100% 5%, 95% 70%, 50% 100%, 5% 70%, 0% 5%)' // <-- Tu polígono
+                }}
+              >
+                {ent.icono ? (
+                  <span className="text-2xl">{ent.icono}</span>
+                ) : (
+                  <img 
+                    src="/entornos.png" 
+                    alt="Entorno" 
+                    // Usamos w-full h-full y object-cover para que llene el hexágono.
+                    // scale-110 asegura que el borde negro de la imagen quede fuera del recorte.
+                    className="w-full h-full object-cover scale-110" 
+                  />
+                )}
+              </div>  
                 <div>
                   <h3 className="font-bold text-lg">{ent.nombre}</h3>
                   <p className="text-xs text-nexo-muted">{ent.area}</p>

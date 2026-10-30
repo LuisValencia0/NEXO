@@ -6,20 +6,10 @@ import Explorar from './pages/Explorar.jsx';
 import CrearIniciativa from './pages/CrearIniciativa.jsx';
 import RutaProtegida from './components/RutaProtegida.jsx';
 import Layout from './components/Layout.jsx';
-import DetalleIniciativa from './pages/DetalleIniciativa.jsx';
-import MisIniciativas from './pages/MisIniciativas.jsx';
 import MisEntornos from './pages/MisEntornos.jsx';
 import Entorno from './pages/Entorno.jsx';
-
-
-function Placeholder({ titulo }) {
-  return (
-    <div className="text-center py-20">
-      <h2 className="text-3xl font-bold mb-3">{titulo}</h2>
-      <p className="text-nexo-muted">En construcción...</p>
-    </div>
-  );
-}
+import Perfil from './pages/Perfil.jsx';
+import MisPostulaciones from './pages/MisPostulaciones.jsx';
 
 export default function App() {
   return (
@@ -32,13 +22,14 @@ export default function App() {
       {/* Protegidas */}
       <Route path="/explorar" element={<RutaProtegida><Layout><Explorar /></Layout></RutaProtegida>} />
       <Route path="/crear-iniciativa" element={<RutaProtegida><Layout><CrearIniciativa /></Layout></RutaProtegida>} />
-      <Route path="/perfil" element={<RutaProtegida><Layout><Placeholder titulo="Mi perfil" /></Layout></RutaProtegida>} />
-      <Route path="/iniciativa/:id" element={<RutaProtegida><Layout><DetalleIniciativa /></Layout></RutaProtegida>}/>
-      <Route path="/mis-iniciativas" element={<RutaProtegida><Layout><MisIniciativas /></Layout></RutaProtegida>}/>
+      <Route path="/perfil" element={<RutaProtegida><Layout><Perfil /></Layout></RutaProtegida>} />
+      
+      {/* Postulaciones (para el menú del navbar) */}
+      <Route path="/mis-postulaciones" element={<RutaProtegida><Layout><MisPostulaciones /></Layout></RutaProtegida>} />
+
+      {/* El corazón de la plataforma */}
       <Route path="/mis-equipos" element={<RutaProtegida><Layout><MisEntornos /></Layout></RutaProtegida>} />
       <Route path="/entorno/:id" element={<RutaProtegida><Layout><Entorno /></Layout></RutaProtegida>} />
-      <Route path="/mis-solicitudes" element={<RutaProtegida><Layout><Placeholder titulo="Solicitudes (Próximamente en tu perfil)" /></Layout></RutaProtegida>} />
     </Routes>
   ); 
 }
-

@@ -105,4 +105,32 @@ router.get('/perfil', verificarToken, async (req, res) => {
   }
 });
 
+// =========================================================
+// PUT /api/auth/perfil
+// Actualizar datos del perfil del usuario logueado
+// =========================================================
+router.put('/perfil', verificarToken, async (req, res) => {
+  try {
+    const camposEditables = ['nombre', 'habilidades', 'intereses', 'biografia', 'disponibilidad', 'portafolio'];
+    const actualizacion = {};
+
+    camposEditables.forEach(campo => {
+      if (req.body[campo] !== undefined) {
+        actualizacion[campo] = req.body[campo];
+      }
+    });
+
+    const usuario = await Usuario.findByIdAndUpdate(
+      req.usuario.id, 
+      actualizacion, 
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    res.json({ mensaje: 'Perfil actualizado', usuario });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

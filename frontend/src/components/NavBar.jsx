@@ -1,15 +1,30 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Compass, Sprout, LayoutDashboard, LogOut } from 'lucide-react';
+import { Compass, LayoutDashboard, LogOut, User, Clock, ChevronDown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+  
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const menuRef = useRef(null);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  // Cerrar el menú si se hace clic fuera de él
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuAbierto(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const linkClass = ({ isActive }) =>
     `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -35,23 +50,17 @@ export default function Navbar() {
             <Compass size={16} strokeWidth={1.8} />
             Explorar
           </NavLink>
-          <NavLink to="/mis-iniciativas" className={linkClass}>
-            <Sprout size={16} strokeWidth={1.8} />
-            Mis iniciativas
-          </NavLink>
-          
-          {/* REEMPLAZAMOS SOLICITUDES Y EQUIPOS POR MIS ENTORNOS */}
           <NavLink to="/mis-equipos" className={linkClass}>
             <LayoutDashboard size={16} strokeWidth={1.8} />
             Mis Entornos
           </NavLink>
         </div>
 
-        {/* Usuario y logout */}
-        <div className="flex items-center gap-3">
-          <Link
-            to="/perfil"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/5 transition-all"
+        {/* Menú de Usuario (Dropdown) */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuAbierto(!menuAbierto)}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-nexo-accent to-nexo-accent-2 flex items-center justify-center text-white text-sm font-semibold">
               {usuario?.nombre?.charAt(0).toUpperCase() || '?'}
@@ -59,16 +68,38 @@ export default function Navbar() {
             <span className="hidden sm:block text-sm text-nexo-text">
               {usuario?.nombre}
             </span>
-          </Link>
-
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 text-sm text-nexo-muted hover:text-red-400 transition-colors px-3 py-1.5"
-            title="Cerrar sesión"
-          >
-            <LogOut size={15} strokeWidth={1.8} />
-            <span className="hidden sm:inline">Salir</span>
+            <ChevronDown size={14} className={`text-nexo-muted transition-transform ${menuAbierto ? 'rotate-180' : ''}`} />
           </button>
+
+          {/* El Dropdown */}
+          {menuAbierto && (
+            <div className="absolute right-0 mt-2 w-56 bg-[#0e1020] border border-white/10 rounded-xl shadow-2xl py-2 z-50">
+              <Link 
+                to="/perfil" 
+                onClick={() => setMenuAbierto(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-nexo-muted hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <User size={16} /> Mi Perfil
+              </Link>
+              
+              <Link 
+                to="/mis-postulaciones" 
+                onClick={() => setMenuAbierto(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-nexo-muted hover:text-white hover:bg-white/5 transition-colors"
+              >
+                <Clock size={16} /> Mis Postulaciones
+              </Link>
+
+              <div className="h-px bg-white/10 my-1 mx-2" />
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut size={16} /> Cerrar Sesión
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

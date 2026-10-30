@@ -58,7 +58,7 @@ export default function CrearIniciativa() {
       const { data } = await api.post('/iniciativas', payload);
 
       // Redirigir a la iniciativa recién creada
-      navigate(`/iniciativa/${data.iniciativa._id}`);
+      navigate('/mis-equipos'); // O a la ruta del entorno si el backend te devuelve el ID del entorno
 
     } catch (err) {
       setError(err.response?.data?.error || 'Error al crear la iniciativa');
