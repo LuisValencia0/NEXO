@@ -1,68 +1,98 @@
 import { motion } from 'framer-motion';
+import { Target, Layers, Zap, Users, Code, Palette, GraduationCap, Rocket, Heart } from 'lucide-react';
 
-const pasos = [
-  {
-    icono: <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-        <path fill="currentColor" fill-rule="evenodd" d="M8 2c-.55228 0-1 .44772-1 1v2H6c-.55228 0-1 .44772-1 1 0 .44954.29662.82979.70483.95572C4.92812 7.93035 4 9.40184 4 11v8.002C4 21.2121 5.79175 23 8 23h8c2.2083 0 4-1.7879 4-3.998V11c0-1.59816-.9281-3.06965-1.7048-4.04428C18.7034 6.8298 19 6.44954 19 6c0-.55228-.4477-1-1-1h-1V3c0-.55228-.4477-1-1-1H8Zm5 7c0-.55228-.4477-1-1-1-.5522 0-1 .44772-1 1v1.703c-.194-.104-.3946-.1973-.5475-.2654-.1648-.0734-.3276-.1409-.45886-.1898-.06227-.0233-.13576-.0493-.20586-.0692-.02974-.0085-.09377-.0261-.17034-.037-.03336-.0048-.11836-.0159-.22524-.0081-.05401.004-.15081.0151-.26455.0554-.111.0393-.30275.1296-.45957.3326-.14595.1889-.18661.3793-.20009.477-.01449.1049-.0093.1904-.00456.2385.00943.0956.03059.1697.03992.2007.02096.0699.04596.1276.05898.1568.02991.0671.06629.1367.09992.1979.07011.1275.16492.2844.27078.4437.10518.1582.23212.3352.36751.4957.11722.139.30928.3498.55094.4923.21752.1282.59062.3174.90382.4637.0816.0381.1647.0759.2447.1108v.8763c-.194-.104-.3946-.1973-.5475-.2654-.1648-.0734-.3276-.1408-.45886-.1898-.06227-.0233-.13576-.0493-.20586-.0692-.02974-.0085-.09377-.0261-.17034-.037-.03336-.0047-.11836-.0159-.22524-.0081-.05401.004-.15081.0151-.26455.0554-.111.0393-.30275.1296-.45957.3326-.14595.189-.18661.3793-.20009.477-.01449.105-.0093.1904-.00456.2386.00943.0955.03059.1696.03992.2006.02096.0699.04596.1276.05898.1568.02991.0671.06629.1368.09992.1979.07011.1275.16492.2844.27078.4437.10518.1582.23212.3352.36751.4957.11722.139.30928.3498.55094.4923.21752.1282.59062.3174.90382.4637.0816.0381.1647.0759.2447.1109V19c0 .5523.4478 1 1 1 .5523 0 1-.4477 1-1v-1.2295c.0801-.0349.1632-.0727.2447-.1108.3132-.1463.6864-.3355.9039-.4637.2416-.1425.4337-.3533.5509-.4923.1354-.1605.2623-.3375.3675-.4957.1059-.1593.2007-.3162.2708-.4437.0336-.0611.07-.1308.0999-.1979.013-.0292.038-.0869.059-.1568.0093-.031.0305-.1051.0399-.2006.0048-.0482.0099-.1336-.0045-.2386-.0135-.0977-.0542-.288-.2001-.477-.1569-.203-.3486-.2933-.4596-.3326-.1137-.0403-.2105-.0514-.2645-.0554-.1069-.0078-.1919.0034-.2253.0081-.0766.0109-.1406.0285-.1703.037-.0701.0199-.1436.0459-.2059.0692-.1312.049-.294.1164-.4588.1898-.1529.0681-.3536.1614-.5476.2654v-.8763c.0801-.0349.1632-.0727.2447-.1108.3132-.1463.6864-.3355.9039-.4637.2416-.1425.4337-.3533.5509-.4923.1354-.1605.2623-.3375.3675-.4957.1059-.1593.2007-.3162.2708-.4437.0336-.0612.07-.1308.0999-.1979.013-.0292.038-.0869.059-.1568.0093-.031.0305-.1051.0399-.2007.0048-.0481.0099-.1336-.0045-.2385-.0135-.0977-.0542-.2881-.2001-.477-.1569-.203-.3486-.2933-.4596-.3326-.1137-.0403-.2105-.0514-.2645-.0554-.1069-.0078-.1919.0033-.2253.0081-.0766.0109-.1406.0285-.1703.037-.0701.0199-.1436.0459-.2059.0692-.1312.0489-.294.1164-.4588.1898-.1529.0681-.3536.1613-.5476.2654V9Z" clip-rule="evenodd"/>
-            </svg>,
-
-
-    titulo: 'Siembra tu idea',
-    descripcion: 'Publica una iniciativa con lo que quieres construir y el tipo de colaboración que buscas.',
-  },
-  {
-    icono: <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-    <path fill-rule="evenodd" d="M5 6a3 3 0 1 1 4 2.83V9a4 4 0 0 0 4 4h.17a3.001 3.001 0 1 1 0 2H13a5.978 5.978 0 0 1-4-1.528v1.699a3.001 3.001 0 1 1-2 0V8.829A3.001 3.001 0 0 1 5 6Z" clip-rule="evenodd"/>
-  </svg>,
-
-    titulo: 'Encuentra colaboradores',
-    descripcion: 'Personas con intereses y capacidades afines descubren tu iniciativa y se postulan.',
-  },
-  {
-    icono: <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-    <path fill-rule="evenodd" d="M20.337 3.664c.213.212.354.486.404.782.294 1.711.657 5.195-.906 6.76-1.77 1.768-8.485 5.517-10.611 6.683a.987.987 0 0 1-1.176-.173l-.882-.88-.877-.884a.988.988 0 0 1-.173-1.177c1.165-2.126 4.913-8.841 6.682-10.611 1.562-1.563 5.046-1.198 6.757-.904.296.05.57.191.782.404ZM5.407 7.576l4-.341-2.69 4.48-2.857-.334a.996.996 0 0 1-.565-1.694l2.112-2.111Zm11.357 7.02-.34 4-2.111 2.113a.996.996 0 0 1-1.69-.565l-.422-2.807 4.563-2.74Zm.84-6.21a1.99 1.99 0 1 1-3.98 0 1.99 1.99 0 0 1 3.98 0Z" clip-rule="evenodd"/></svg>,
-    titulo: 'Construyan juntos',
-    descripcion: 'Acepta a quienes encajen, conformen un equipo y tengan su propio entorno de trabajo.',
-  },
+const areas = [
+  { icono: Code, nombre: 'Tecnología' },
+  { icono: Palette, nombre: 'Cultura' },
+  { icono: GraduationCap, nombre: 'Educación' },
+  { icono: Rocket, nombre: 'Emprendimiento' },
+  { icono: Heart, nombre: 'Social' },
 ];
 
 export default function QueEsNexo() {
   return (
-    <section className="relative py-32 px-6">
-      <div className="max-w-6xl mx-auto">
-
+    <section className="relative py-24 overflow-hidden">
+      
+      {/* Marquee de Áreas (Carrusel Infinito) */}
+      <div className="w-full border-y border-white/5 bg-white/[0.02] py-6 mb-24 flex overflow-hidden relative">
+        <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-nexo-bg to-transparent z-10" />
+        <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-nexo-bg to-transparent z-10" />
+        
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-100px' }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          className="flex gap-16 whitespace-nowrap items-center"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            ¿Qué es NEXO?
-          </h2>
-          <p className="text-nexo-muted text-lg max-w-2xl mx-auto">
-            Un lugar digital donde las ideas dejan de estar solas y empiezan a crecer con las personas correctas.
-          </p>
+          {[...areas, ...areas, ...areas, ...areas].map((area, i) => {
+            const Icono = area.icono;
+            return (
+              <div key={i} className="flex items-center gap-3 text-nexo-muted/50">
+                <Icono size={20} />
+                <span className="text-lg font-medium uppercase tracking-widest">{area.nombre}</span>
+              </div>
+            );
+          })}
         </motion.div>
+      </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {pasos.map((paso, i) => (
-            <motion.div
-              key={paso.titulo}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.7, delay: i * 0.15 }}
-              className="card-nexo p-8"
-            >
-              <div className="text-4xl mb-6">{paso.icono}</div>
-              <h3 className="text-xl font-semibold mb-3">{paso.titulo}</h3>
-              <p className="text-nexo-muted leading-relaxed">{paso.descripcion}</p>
-            </motion.div>
-          ))}
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">¿Por qué usar NEXO?</h2>
+          <p className="text-xl text-nexo-muted max-w-2xl">Porque las mejores ideas no se construyen en solitario. Necesitas la infraestructura correcta.</p>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="md:col-span-2 relative p-10 rounded-[2rem] bg-gradient-to-br from-[#0a0c18] to-[#07080f] border border-white/5 overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-nexo-accent/10 blur-[80px] group-hover:bg-nexo-accent/20 transition-all duration-500" />
+            <Target className="text-nexo-accent-3 mb-6" size={36} strokeWidth={1.5} />
+            <h3 className="text-2xl font-bold mb-3 relative z-10">Habilidades exactas, no currículums</h3>
+            <p className="text-nexo-muted text-lg max-w-md relative z-10">Filtra por lo que realmente necesitas: React, diseño UX, ilustración, redacción. Encuentra a la persona indicada sin leer interminables hojas de vida.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="relative p-8 rounded-[2rem] bg-[#0a0c18] border border-white/5 group"
+          >
+            <Layers className="text-nexo-accent mb-6" size={32} strokeWidth={1.5} />
+            <h3 className="text-xl font-bold mb-3">Postulaciones transparentes</h3>
+            <p className="text-nexo-muted">Tú decides quién entra. Revisa el perfil y el mensaje de cada postulante antes de aceptar.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="relative p-8 rounded-[2rem] bg-[#0a0c18] border border-white/5 group"
+          >
+            <Zap className="text-nexo-accent-2 mb-6" size={32} strokeWidth={1.5} />
+            <h3 className="text-xl font-bold mb-3">Espacios de trabajo listos</h3>
+            <p className="text-nexo-muted">Al aceptar a alguien, el sistema crea un entorno con chat en tiempo real automáticamente.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="md:col-span-2 relative p-10 rounded-[2rem] bg-gradient-to-bl from-[#0a0c18] to-[#07080f] border border-white/5 overflow-hidden group flex flex-col justify-between"
+          >
+             <div className="absolute bottom-0 left-0 w-64 h-64 bg-nexo-accent-2/10 blur-[80px] group-hover:bg-nexo-accent-2/20 transition-all duration-500" />
+            <div>
+              <Users className="text-white mb-6" size={36} strokeWidth={1.5} />
+              <h3 className="text-2xl font-bold mb-3 relative z-10">Lidera o colabora</h3>
+            </div>
+            <p className="text-nexo-muted text-lg max-w-md relative z-10 mt-4">La plataforma se adapta a ti. Sé el líder que gestiona el equipo o el colaborador que aporta su talento a una gran idea.</p>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

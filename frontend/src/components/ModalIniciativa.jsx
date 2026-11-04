@@ -28,11 +28,9 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
   const [enviando, setEnviando] = useState(false);
   const [postuladoLocal, setPostuladoLocal] = useState(false);
   
-  // --- NUEVOS ESTADOS PARA EL MENSAJE ---
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [mensaje, setMensaje] = useState('');
 
-  // Cerrar con Escape y bloquear scroll
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -59,7 +57,6 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
   const puedePostularse = !esLider && iniciativa.estado === 'abierta' && !cuposLlenos && !iniciativa.postulado && !postuladoLocal;
   const yaPostulado = iniciativa.postulado || postuladoLocal;
 
-  // Función para enviar la postulación con el mensaje
   const handlePostular = async (e) => {
     e.preventDefault();
     if (!mensaje.trim()) return alert('Por favor, escribe un mensaje para el líder.');
@@ -71,7 +68,7 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
         mensaje: mensaje.trim()
       });
       setPostuladoLocal(true);
-      setMostrarFormulario(false); // Volvemos a la vista normal para mostrar el éxito
+      setMostrarFormulario(false);
     } catch (err) {
       alert(err.response?.data?.error || 'Error al postularse');
     } finally {
@@ -224,17 +221,27 @@ export default function ModalIniciativa({ iniciativa, onClose }) {
                   </div>
                 )}
 
-                <div className="rounded-xl p-4 mb-8" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                {/* BLOQUE DEL LÍDER (AHORA CLICKEABLE) */}
+                <div 
+                  onClick={() => {
+                    onClose(); // Cerramos el modal
+                    navigate(`/perfil/${iniciativa.lider._id}`); // Navegamos al perfil público
+                  }}
+                  className="rounded-xl p-4 mb-8 cursor-pointer group transition-colors hover:bg-white/5"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-semibold"
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-semibold shadow-md group-hover:scale-105 transition-transform"
                       style={{ background: `linear-gradient(135deg, ${area.acento}, #b06dff)` }}
                     >
                       {iniciativa.lider?.nombre?.charAt(0).toUpperCase() || '?'}
                     </div>
                     <div>
                       <p className="text-xs text-nexo-muted uppercase tracking-wider mb-0.5">Líder de la iniciativa</p>
-                      <p className="font-medium">{iniciativa.lider?.nombre || 'Sin asignar'}</p>
+                      <p className="font-medium group-hover:text-nexo-accent transition-colors">
+                        {iniciativa.lider?.nombre || 'Sin asignar'}
+                      </p>
                     </div>
                   </div>
                 </div>

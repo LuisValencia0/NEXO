@@ -106,7 +106,7 @@ router.post('/unirse-codigo', verificarToken, async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const item = await Iniciativa.findById(req.params.id)
-      .populate('lider', 'nombre email habilidades');
+      .populate('lider', 'nombre email habilidades intereses biografia disponibilidad portafolio'); // <-- Traemos todo el perfil
     if (!item) return res.status(404).json({ error: 'No encontrada' });
     res.json(item);
   } catch (err) { res.status(500).json({ error: err.message }); }

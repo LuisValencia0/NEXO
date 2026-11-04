@@ -143,14 +143,21 @@ export default function Perfil() {
 
           <div>
             <label className="text-sm text-nexo-muted mb-2 block">Disponibilidad</label>
-            <input type="text" value={form.disponibilidad} onChange={e => setForm({...form, disponibilidad: e.target.value})} className="input-base" placeholder="Ej: Medio tiempo, fines de semana..." />
-          </div>
+              <input 
+                type="text" 
+                value={form.disponibilidad} 
+                onChange={e => setForm({...form, disponibilidad: e.target.value})} 
+                className="input-base" 
+                placeholder="Ej: Medio tiempo, fines de semana..."
+                onKeyDown={(e) => { if(e.key === 'Enter') e.preventDefault(); }} // <-- ESTO
+              />
+            </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div>
                <label className="text-sm text-nexo-muted mb-2 block">Habilidades</label>
                <div className="flex gap-2 mb-2">
-                 <input type="text" id="input-habilidad" className="input-base flex-1" placeholder="Ej: React" onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleTag('habilidades', e.target.value); e.target.value = ''; } }} />
+                 <input type="text" id="input-habilidad" className="input-base flex-1" placeholder="Ej: React" onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handleTag('habilidades', e.target.value); e.target.value = ''; } }} />
                </div>
                <div className="flex flex-wrap gap-2">
                  {form.habilidades.map((h, i) => (
@@ -164,7 +171,7 @@ export default function Perfil() {
              <div>
                <label className="text-sm text-nexo-muted mb-2 block">Intereses</label>
                <div className="flex gap-2 mb-2">
-                 <input type="text" id="input-interes" className="input-base flex-1" placeholder="Ej: IA, Educación" onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); handleTag('intereses', e.target.value); e.target.value = ''; } }} />
+                 <input type="text" id="input-interes" className="input-base flex-1" placeholder="Ej: IA, Educación" onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); handleTag('intereses', e.target.value); e.target.value = ''; } }} />
                </div>
                <div className="flex flex-wrap gap-2">
                  {form.intereses.map((h, i) => (

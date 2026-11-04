@@ -9,7 +9,9 @@ import Layout from './components/Layout.jsx';
 import MisEntornos from './pages/MisEntornos.jsx';
 import Entorno from './pages/Entorno.jsx';
 import Perfil from './pages/Perfil.jsx';
+import VerPerfil from './pages/VerPerfil.jsx';
 import MisPostulaciones from './pages/MisPostulaciones.jsx';
+
 
 export default function App() {
   return (
@@ -23,6 +25,7 @@ export default function App() {
       <Route path="/explorar" element={<RutaProtegida><Layout><Explorar /></Layout></RutaProtegida>} />
       <Route path="/crear-iniciativa" element={<RutaProtegida><Layout><CrearIniciativa /></Layout></RutaProtegida>} />
       <Route path="/perfil" element={<RutaProtegida><Layout><Perfil /></Layout></RutaProtegida>} />
+      <Route path="/perfil/:id" element={<RutaProtegida><Layout><VerPerfil /></Layout></RutaProtegida>} />
       
       {/* Postulaciones (para el menú del navbar) */}
       <Route path="/mis-postulaciones" element={<RutaProtegida><Layout><MisPostulaciones /></Layout></RutaProtegida>} />

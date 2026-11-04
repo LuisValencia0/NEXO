@@ -2,8 +2,8 @@ import NetworkBackground from '../components/NetworkBackground.jsx';
 import NavbarPublica from '../components/NavbarPublica.jsx';
 import Hero from '../components/Hero.jsx';
 import QueEsNexo from '../components/QueEsNexo.jsx';
-import CicloVisual from '../components/CicloVisual.jsx';
 import CtaFinal from '../components/CtaFinal.jsx';
+import Footer from '../components/Footer.jsx';
 
 export default function Landing() {
   return (
@@ -14,9 +14,10 @@ export default function Landing() {
         <NavbarPublica />
         <Hero />
         <QueEsNexo />
-        <CicloVisual />
         <CtaFinal />
+        <Footer /> 
       </div>
+     
     </div>
   );
 }

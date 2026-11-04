@@ -133,4 +133,16 @@ router.put('/perfil', verificarToken, async (req, res) => {
   }
 });
 
+// GET /api/auth/usuario/:id -> Ver perfil de otro usuario
+router.get('/usuario/:id', async (req, res) => {
+  try {
+    const usuario = await Usuario.findById(req.params.id)
+      .select('-password -email'); // Ocultamos la contraseña y el email por privacidad
+    if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
+    res.json(usuario);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
