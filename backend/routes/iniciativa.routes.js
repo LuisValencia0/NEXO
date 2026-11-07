@@ -5,6 +5,7 @@ const Equipo          = require('../models/Equipo');
 const Entorno         = require('../models/Entorno');
 const Solicitud       = require('../models/Solicitud');
 const verificarToken  = require('../middleware/auth');
+const verificarAdmin  = require('../middleware/admin');
 
 // =========================================================
 // GET /api/iniciativas — público (trae privadas si hay token)
@@ -263,11 +264,8 @@ router.put('/:id/terminar', verificarToken, async (req, res) => {
 // =========================================================
 // DELETE /api/iniciativas/:id — solo admin
 // =========================================================
-router.delete('/:id', verificarToken, async (req, res) => {
+router.delete('/:id', verificarToken, verificarAdmin, async (req, res) => {
   try {
-    if (req.usuario.rol !== 'admin') {
-      return res.status(403).json({ error: 'Solo un admin puede eliminar iniciativas' });
-    }
     const ini = await Iniciativa.findById(req.params.id);
     if (!ini) return res.status(404).json({ error: 'No encontrada' });
 

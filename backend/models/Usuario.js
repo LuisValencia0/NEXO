@@ -17,6 +17,7 @@ const UsuarioSchema = new mongoose.Schema({
   biografia:   { type: String, default: '' },
   disponibilidad: { type: String, default: '' },
   portafolio:  { type: String, default: '' },
+  activo: { type: Boolean, default: true },
   fechaRegistro: { type: Date, default: Date.now }
 
 }, { timestamps: true });

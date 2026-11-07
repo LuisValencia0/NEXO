@@ -11,6 +11,8 @@ import Entorno from './pages/Entorno.jsx';
 import Perfil from './pages/Perfil.jsx';
 import VerPerfil from './pages/VerPerfil.jsx';
 import MisPostulaciones from './pages/MisPostulaciones.jsx';
+import RutaAdmin from './components/RutaAdmin.jsx'; // <-- NUEVO
+import AdminUsuarios from './pages/AdminUsuarios.jsx';
 
 
 export default function App() {
@@ -33,6 +35,9 @@ export default function App() {
       {/* El corazón de la plataforma */}
       <Route path="/mis-equipos" element={<RutaProtegida><Layout><MisEntornos /></Layout></RutaProtegida>} />
       <Route path="/entorno/:id" element={<RutaProtegida><Layout><Entorno /></Layout></RutaProtegida>} />
+
+      <Route path="/admin/usuarios" element={<RutaAdmin><Layout><AdminUsuarios /></Layout></RutaAdmin>} />
     </Routes>
+
   ); 
 }

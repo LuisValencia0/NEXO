@@ -70,6 +70,15 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
+    // Verificamos si está suspendido (solo bloquea si es explícitamente false)
+    if (usuario.activo === false) {
+      return res.status(403).json({ error: 'Cuenta suspendida. Contacte al administrador.' });
+    }
+
+    if (!usuario.activo) {
+      return res.status(403).json({ error: 'Cuenta suspendida. Contacte al administrador.' });
+    }
+
     const token = jwt.sign(
       { id: usuario._id, email: usuario.email, rol: usuario.rol },
       process.env.JWT_SECRET,

@@ -6,6 +6,7 @@ const http     = require('http'); // <-- NUEVO
 const { Server } = require('socket.io'); // <-- NUEVO
 
 const authRoutes       = require('./routes/auth');
+const UsuariosRoutes   = require('./routes/usuarios.routes');
 const IniciativaRoutes = require('./routes/iniciativa.routes');
 const SolicitudRoutes  = require('./routes/solicitud.routes');
 const EquipoRoutes     = require('./routes/equipo.routes');
@@ -30,6 +31,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/auth', authRoutes);
+app.use('/api/usuarios', UsuariosRoutes);
 app.use('/api/iniciativas', IniciativaRoutes);
 app.use('/api/solicitudes', SolicitudRoutes);
 app.use('/api/equipos', EquipoRoutes);
